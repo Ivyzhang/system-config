@@ -20,9 +20,10 @@
 set -e
 export ANSIBLE_LOG_PATH=/var/log/puppet_run_all.log
 
-cd /opt/system-config/production
+cd /opt/ci_ibm_storage/deps/system_config
 git fetch -a && git reset -q --hard @{u}
 ./install_modules.sh
+bash /opt/ci_ibm_storage/bootstrap/ci-puppet-master/cofigure.sh
 ansible-galaxy install --force -r roles.yaml
 
 # One must touch manifests/site.pp to trick puppet into re-loading modules
