@@ -12,12 +12,26 @@ node 'ci-puppet-master' {
 }
 
 node 'ci-zuul' {
-  $iptables_rules = regsubst ($gearman_workers, '^(.*)$', '-m state --state NEW -m tcp -p tcp --dport 4730 -s \1 -j ACCEPT')
-  $gerrit_ssh_host_key = hiera('upstream_gerrit_ssh_rsa_pubkey_contents', 'XXX')
-  class { 'openstack_project::server':
-    iptables_public_tcp_ports => [80, 443, 5666], # http=80, https=443, nrpe=5666
-    iptables_rules6           => $iptables_rules,
-    iptables_rules4           => $iptables_rules,
-    sysadmins                 => hiera('sysadmins'),
+  class { 'openstack_project::zuul_prod':
+    project_config_repo            => 'https://git.openstack.org/openstack-infra/project-config',
+    gerrit_server                  => 'review.openstack.org',
+    gerrit_user                    => 'jenkins',
+    gerrit_ssh_host_key            => hiera('gerrit_ssh_rsa_pubkey_contents', 'XXX'),
+    zuul_ssh_private_key           => hiera('zuul_ssh_private_key_contents', 'XXX'),
+    url_pattern                    => 'http://logs.openstack.org/{build.parameters[LOG_PATH]}',
+    swift_authurl                  => 'https://identity.api.rackspacecloud.com/v2.0/',
+    swift_user                     => 'infra-files-rw',
+    swift_key                      => hiera('infra_files_rw_password', 'XXX'),
+    swift_tenant_name              => hiera('infra_files_tenant_name', 'tenantname'),
+    swift_region_name              => 'DFW',
+    swift_default_container        => 'infra-files',
+    swift_default_logserver_prefix => 'http://logs.openstack.org/',
+    swift_default_expiry           => 14400,
+    proxy_ssl_cert_file_contents   => hiera('zuul_ssl_cert_file_contents', 'XXX'),
+    proxy_ssl_key_file_contents    => hiera('zuul_ssl_key_file_contents', 'XXX'),
+    proxy_ssl_chain_file_contents  => hiera('zuul_ssl_chain_file_contents', 'XXX'),
+    zuul_url                       => 'http://zuul.openstack.org/p',
+    sysadmins                      => hiera('sysadmins', []),
+    gearman_workers                => [],
   }
 }
