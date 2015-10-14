@@ -1,7 +1,6 @@
 script-dir: /etc/nodepool/scripts
 elements-dir: /etc/nodepool/elements
 images-dir: /opt/nodepool_dib
-dburi: 'mysql+pymysql://nodepool:<%= mysql_password %>@localhost/nodepool'
 
 cron:
   cleanup: '*/1 * * * *'
@@ -34,6 +33,7 @@ labels:
       - name: rax-dfw
       - name: rax-ord
       - name: rax-iad
+      - name: ovh-gra1
   - name: devstack-precise-check
     image: devstack-precise-check
     min-ready: 0
@@ -65,6 +65,7 @@ labels:
       - name: rax-dfw
       - name: rax-ord
       - name: rax-iad
+      - name: ovh-gra1
   # Special dib specific labels for testing dib based images
   # in new providers as we dibify them.
   - name: devstack-trusty-dib
@@ -116,6 +117,7 @@ labels:
       - name: rax-dfw
       - name: rax-ord
       - name: rax-iad
+      - name: ovh-gra1
   - name: ubuntu-trusty
     image: ubuntu-trusty
     ready-script: configure_mirror.sh
@@ -129,6 +131,7 @@ labels:
       - name: rax-dfw
       - name: rax-ord
       - name: rax-iad
+      - name: ovh-gra1
   - name: ubuntu-trusty-check
     image: ubuntu-trusty-check
     min-ready: 1
@@ -148,6 +151,7 @@ labels:
       - name: hpcloud-b3
       - name: hpcloud-b4
       - name: hpcloud-b5
+      - name: ovh-gra1
   - name: devstack-trusty-2-node
     image: devstack-trusty
     ready-script: multinode_setup.sh
@@ -162,6 +166,7 @@ labels:
       - name: hpcloud-b3
       - name: hpcloud-b4
       - name: hpcloud-b5
+      - name: ovh-gra1
   - name: devstack-precise-2-node
     image: devstack-precise
     ready-script: multinode_setup.sh
@@ -952,11 +957,35 @@ providers:
     cloud: ovh
     api-timeout: 60
     boot-timeout: 120
-    max-servers: 50
-    rate: 0.1
+    max-servers: 0
+    rate: 10.0
     image-type: raw
     images:
+      - name: centos-6
+        min-ram: 8000
+        name-filter: 'ssd-osFoundation'
+        diskimage: centos-6
+        username: jenkins
+        private-key: /home/nodepool/.ssh/id_rsa
+      - name: devstack-precise
+        min-ram: 8000
+        name-filter: 'ssd-osFoundation'
+        diskimage: devstack-precise
+        username: jenkins
+        private-key: /home/nodepool/.ssh/id_rsa
+      - name: devstack-trusty
+        min-ram: 8000
+        name-filter: 'ssd-osFoundation'
+        diskimage: devstack-trusty
+        username: jenkins
+        private-key: /home/nodepool/.ssh/id_rsa
       - name: ubuntu-trusty-check
+        min-ram: 8000
+        name-filter: 'ssd-osFoundation'
+        diskimage: ubuntu-trusty
+        username: jenkins
+        private-key: /home/nodepool/.ssh/id_rsa
+      - name: ubuntu-trusty
         min-ram: 8000
         name-filter: 'ssd-osFoundation'
         diskimage: ubuntu-trusty
@@ -994,47 +1023,12 @@ providers:
         private-key: /home/nodepool/.ssh/id_rsa
 targets:
   - name: jenkins01
-    jenkins:
-      url: 'https://jenkins01.openstack.org/'
-      user: '<%= jenkins_api_user %>'
-      apikey: '<%= jenkins_api_key %>'
-      credentials-id: '<%= jenkins_credentials_id %>'
   - name: jenkins02
-    jenkins:
-      url: 'https://jenkins02.openstack.org/'
-      user: '<%= jenkins_api_user %>'
-      apikey: '<%= jenkins_api_key %>'
-      credentials-id: '<%= jenkins_credentials_id %>'
   - name: jenkins03
-    jenkins:
-      url: 'https://jenkins03.openstack.org/'
-      user: '<%= jenkins_api_user %>'
-      apikey: '<%= jenkins_api_key %>'
-      credentials-id: '<%= jenkins_credentials_id %>'
   - name: jenkins04
-    jenkins:
-      url: 'https://jenkins04.openstack.org/'
-      user: '<%= jenkins_api_user %>'
-      apikey: '<%= jenkins_api_key %>'
-      credentials-id: '<%= jenkins_credentials_id %>'
   - name: jenkins05
-    jenkins:
-      url: 'https://jenkins05.openstack.org/'
-      user: '<%= jenkins_api_user %>'
-      apikey: '<%= jenkins_api_key %>'
-      credentials-id: '<%= jenkins_credentials_id %>'
   - name: jenkins06
-    jenkins:
-      url: 'https://jenkins06.openstack.org/'
-      user: '<%= jenkins_api_user %>'
-      apikey: '<%= jenkins_api_key %>'
-      credentials-id: '<%= jenkins_credentials_id %>'
   - name: jenkins07
-    jenkins:
-      url: 'https://jenkins07.openstack.org/'
-      user: '<%= jenkins_api_user %>'
-      apikey: '<%= jenkins_api_key %>'
-      credentials-id: '<%= jenkins_credentials_id %>'
 
 diskimages:
   - name: centos-6
