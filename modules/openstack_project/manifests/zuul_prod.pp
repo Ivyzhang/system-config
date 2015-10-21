@@ -1,10 +1,10 @@
 # == Class: openstack_project::zuul_prod
 #
 class openstack_project::zuul_prod(
-  $vhost_name = $::fqdn,
+  $vhost_name = $::hostname,
   $gearman_server = '127.0.0.1',
-  $gerrit_server = '',
-  $gerrit_user = '',
+  $gerrit_server = 'review.openstack.org',
+  $gerrit_user = 'ibm_storage_ci',
   $gerrit_ssh_host_key = '',
   $zuul_ssh_private_key = '',
   $url_pattern = '',
@@ -24,7 +24,7 @@ class openstack_project::zuul_prod(
   $proxy_ssl_chain_file_contents = '',
   $sysadmins = [],
   $statsd_host = '',
-  $gearman_workers = [],
+  $gearman_workers = ['ci-jenkins-master'],
   $project_config_repo = '',
   $git_email = 'jenkins@openstack.org',
   $git_name = 'OpenStack Jenkins',
