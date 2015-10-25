@@ -1,6 +1,6 @@
 
 # node-OS: precise
-node 'ci-puppet-master' {
+node 'ci-puppet-master.openstacklocal' {
   class { 'openstack_project::server':
     iptables_public_tcp_ports => [4505, 4506, 8140],
     sysadmins                 => hiera('sysadmins', []),
@@ -11,7 +11,7 @@ node 'ci-puppet-master' {
   }
 }
 
-node 'ci-zuul' {
+node 'ci-zuul.openstacklocal' {
   class { 'openstack_project::zuul_prod':
     project_config_repo            => 'https://git.openstack.org/openstack-infra/project-config',
     gerrit_server                  => 'review.openstack.org',
@@ -28,10 +28,11 @@ node 'ci-zuul' {
     swift_default_logserver_prefix => 'http://logs.openstack.org/',
     swift_default_expiry           => 14400,
     proxy_ssl_cert_file_contents   => hiera('zuul_ssl_cert_file_contents', 'XXX'),
-    proxy_ssl_key_file_contents    => hiera('zuul_ssl_key_file_contents', 'XXX'),
-    proxy_ssl_chain_file_contents  => hiera('zuul_ssl_chain_file_contents', 'XXX'),
     zuul_url                       => 'http://zuul.openstack.org/p',
     sysadmins                      => hiera('sysadmins', []),
-    gearman_workers                => [],
-  }
+    statsd_host                    => 'graphite.openstack.org',
+    gearman_workers                => [
+      'nodepool.openstack.org',
+    ],
+  }  
 }
