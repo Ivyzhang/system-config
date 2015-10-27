@@ -9,7 +9,7 @@
 class openstack_project::single_use_slave (
   $certname = $::fqdn,
   $install_users = true,
-  $install_resolv_conf = true,
+  $install_resolv_conf = false,
   $sudo = false,
   $thin = true,
   $automatic_upgrades = false,
