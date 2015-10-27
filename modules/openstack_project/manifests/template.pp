@@ -15,7 +15,7 @@ class openstack_project::template (
   $ca_server                 = undef,
   $enable_unbound            = false,
   $afs                       = false,
-  $puppetmaster_server       = 'ci-puppet-master.openstacklocal',
+  $puppetmaster_server       = 'ci-puppet-master',
   $manage_exim               = false,
   $sysadmins                 = [],
   $pypi_index_url            = 'https://pypi.python.org/simple',
