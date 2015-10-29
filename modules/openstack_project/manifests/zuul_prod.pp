@@ -1,7 +1,7 @@
 # == Class: openstack_project::zuul_prod
 #
 class openstack_project::zuul_prod(
-  $vhost_name = $::hostname,
+  $vhost_name = $::fqdn,
   $gearman_server = '127.0.0.1',
   $gerrit_server = 'review.openstack.org',
   $gerrit_user = 'ibm_storage_ci',
