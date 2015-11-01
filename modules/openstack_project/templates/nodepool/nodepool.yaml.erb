@@ -232,24 +232,17 @@ labels:
     ready-script: configure_mirror.sh
     min-ready: 1
     providers:
+      - name: rax-dfw
+      - name: rax-ord
+      - name: rax-iad
       - name: hpcloud-b1
       - name: hpcloud-b2
       - name: hpcloud-b3
       - name: hpcloud-b4
       - name: hpcloud-b5
-  - name: tripleo-precise
-    image: tripleo-precise
-    min-ready: 8
-    providers:
-      - name: tripleo-test-cloud-rh1
-  - name: tripleo-f20
-    image: tripleo-f20
-    min-ready: 0
-    providers:
-      - name: tripleo-test-cloud-rh1
   - name: tripleo-f21
     image: tripleo-f21
-    min-ready: 8
+    min-ready: 16
     providers:
       - name: tripleo-test-cloud-rh1
 
@@ -322,6 +315,12 @@ providers:
         setup: prepare_node_devstack.sh
         username: jenkins
         private-key: /home/nodepool/.ssh/id_rsa
+      - name: fedora-22
+        min-ram: 8192
+        diskimage: fedora-22
+        username: jenkins
+        private-key: /home/nodepool/.ssh/id_rsa
+        config-drive: true
       - name: devstack-centos7
         base-image: 'CentOS 7 (PVHVM)'
         min-ram: 8192
@@ -397,6 +396,12 @@ providers:
         setup: prepare_node_devstack.sh
         username: jenkins
         private-key: /home/nodepool/.ssh/id_rsa
+      - name: fedora-22
+        min-ram: 8192
+        diskimage: fedora-22
+        username: jenkins
+        private-key: /home/nodepool/.ssh/id_rsa
+        config-drive: true
       - name: devstack-centos7
         base-image: 'CentOS 7 (PVHVM)'
         min-ram: 8192
@@ -479,6 +484,12 @@ providers:
         setup: prepare_node_devstack.sh
         username: jenkins
         private-key: /home/nodepool/.ssh/id_rsa
+      - name: fedora-22
+        min-ram: 8192
+        diskimage: fedora-22
+        username: jenkins
+        private-key: /home/nodepool/.ssh/id_rsa
+        config-drive: true
       - name: devstack-centos7
         base-image: 'CentOS 7 (PVHVM)'
         min-ram: 8192
@@ -1000,20 +1011,6 @@ providers:
       - net-label: default-net
       - net-label: tripleo-bm-test
     images:
-      - name: tripleo-precise
-        base-image: 'Ubuntu Precise 12.04 LTS Server 64-bit'
-        min-ram: 8192
-        name-filter: h1
-        setup: prepare_node_tripleo.sh
-        username: jenkins
-        private-key: /home/nodepool/.ssh/id_rsa
-      - name: tripleo-f20
-        base-image: 'Fedora 20 64-bit'
-        min-ram: 8192
-        name-filter: h1
-        setup: prepare_node_tripleo.sh
-        username: jenkins
-        private-key: /home/nodepool/.ssh/id_rsa
       - name: tripleo-f21
         base-image: 'Fedora 21 64-bit'
         min-ram: 8192
@@ -1115,12 +1112,13 @@ diskimages:
       QEMU_IMG_OPTIONS: compat=0.10
   - name: fedora-22
     elements:
-      - fedora
+      - fedora-minimal
       - vm
+      - simple-init
       - openstack-repos
-      - puppet
       - nodepool-base
       - node-devstack
+      - puppet
     release: 22
     env-vars:
       TMPDIR: /opt/dib_tmp

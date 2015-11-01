@@ -57,10 +57,13 @@ for MOD in ${!INTEGRATION_MODULES[*]}; do
     project_names+=" $project_scope/$repo_name"
 done
 
+project_names+=" openstack-infra/puppet-openstack-health"
+
 sudo -E /usr/zuul-env/bin/zuul-cloner -m clonemap.yaml --cache-dir /opt/git \
     git://git.openstack.org \
     $project_names
 
+sudo mv /etc/puppet/modules/openstack-health /etc/puppet/modules/openstack_health
 
 if [[ ! -d applytest ]] ; then
     mkdir applytest
@@ -76,6 +79,7 @@ sed -i -e '/^\}$/d' applytest/puppetapplytest*
 # This gives us the node {} internal contents.
 sed -i -e 's/^[^][:space:]$]/#&/g' applytest/prep00 applytest/puppetapplytest*
 sed -i -e 's@hiera(.\([^.]*\).,\([^)]*\))@\2@' applytest/prep00 applytest/puppetapplytest*
+sed -i -e "s@hiera(.\([^.]*\).)@'\1NoDefault'@" applytest/prep00 applytest/puppetapplytest*
 mv applytest/prep00 applytest/head  # These are the top-level variables defined in site.pp
 
 if [[ `lsb_release -i -s` == 'CentOS' ]]; then

@@ -392,6 +392,49 @@ project in question, and about 10 minutes of downtime for all of
 Gerrit. All Gerrit changes, merged and open, will carry over, so
 in-progress changes do not need to be merged before the move.
 
+Note that some of the steps in the process below are repetitive and
+so for larger batches a script can be used to generate the command
+lists for upload to and execution on their respective servers::
+
+  #!/bin/sh
+  #
+  # Expects a renames.list file in the current directory with:
+  #
+  #     stackforge/foo -> openstack/foo
+  #     openstack/oldbar -> openstack/newbar
+
+  echo "\nGerrit database updates\n-----------------------"
+  for r in `sed 's/ -> /@/' renames.list` ; do
+      OLD=`echo $r | cut -d@ -f1`
+      NEW=`echo $r | cut -d@ -f2`
+      echo "update account_project_watches set project_name = \"$NEW\" where
+          project_name = \"$OLD\";"
+      echo "update changes set dest_project_name = \"$NEW\",
+          created_on = created_on where dest_project_name = \"$OLD\";"
+  done
+
+  echo "\nGerrit filesystem updates\n-------------------------"
+  for r in `sed 's/ -> /@/' renames.list` ; do
+      OLD=`echo $r | cut -d@ -f1` ; NEW=`echo $r | cut -d@ -f2`
+      echo "sudo mv ~gerrit2/review_site/git/{$OLD,$NEW}.git"
+      echo "sudo mv /opt/lib/git/{$OLD,$NEW}.git"
+  done
+
+  echo "\nGit farm filesystem updates\n---------------------------"
+  for r in `sed 's/ -> /@/' renames.list` ; do
+      OLD=`echo $r | cut -d@ -f1`
+      NEW=`echo $r | cut -d@ -f2`
+      echo "sudo mv /var/lib/git/{$OLD,$NEW}.git"
+  done
+
+  echo "\nJenkins workspace cleanup\n-------------------------"
+  for r in `sed 's/ -> /@/' renames.list` ; do
+  NAME=`echo $r | cut -d@ -f1 | cut -d/ -f2`
+  echo "sudo ansible-playbook -f 10 \\
+      /etc/ansible/playbooks/clean_workspaces.yaml \\
+      --extra-vars \"project=$NAME\""
+  done
+
 To rename a project:
 
 #. Prepare a change to the project-config repo to update things like
@@ -442,9 +485,9 @@ To rename a project:
 
      sudo su - gerrit2
      cp -ax review_site/index index.backup.`date +%s`
-     java -jar review_site/bin/gerrit.war reindex -d /home/gerrit2/review_site
+     java -jar review_site/bin/gerrit.war reindex -d /home/gerrit2/review_site --threads 4
 
-#. Move the Git repository on git{01-05}.openstack.org (while the
+#. Move the Git repository on git{01-08}.openstack.org (while the
    Lucene reindex is running)::
 
      sudo mv /var/lib/git/openstack/{OLD,NEW}.git

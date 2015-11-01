@@ -12,16 +12,19 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# subunit2sql worker glue class.
+# openstack-health api worker glue class.
 #
-class openstack_project::subunit_worker (
-  $subunit2sql_db_host,
-  $subunit2sql_db_pass,
+class openstack_project::openstack_health_api (
+  $subunit2sql_db_host = 'localhost',
+  $subunit2sql_db_user = 'query',
+  $subunit2sql_db_name = 'subunit2sql',
+  $subunit2sql_db_pass = 'query',
+  $hostname = $::fqdn,
 ) {
-  include subunit2sql
-  subunit2sql::worker { 'A':
-    config_file        => 'puppet:///modules/openstack_project/logstash/jenkins-subunit-worker.yaml',
-    db_host            => $subunit2sql_db_host,
-    db_pass            => $subunit2sql_db_pass,
+  include 'openstack_health'
+  class { 'openstack_health::api':
+    db_uri     => "mysql+pymysql://${subunit2sql_db_user}:${subunit2sql_db_pass}@${subunit2sql_db_host}/${subunit2sql_db_name}",
+    vhost_name => $hostname,
+    vhost_port => 80,
   }
 }

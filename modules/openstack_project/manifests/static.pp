@@ -143,10 +143,17 @@ class openstack_project::static (
   # Tarballs
 
   ::httpd::vhost { 'tarballs.openstack.org':
-    port     => 80,
-    priority => '50',
-    docroot  => '/srv/static/tarballs',
-    require  => File['/srv/static/tarballs'],
+    port       => 443, # Is required despite not being used.
+    docroot    => '/srv/static/tarballs',
+    priority   => '50',
+    ssl        => true,
+    template   => 'openstack_project/static-http-and-https.vhost.erb',
+    vhost_name => 'tarballs.openstack.org',
+    require    => [
+      File['/srv/static/tarballs'],
+      File[$cert_file],
+      File[$key_file],
+    ],
   }
 
   file { '/srv/static/tarballs':
@@ -183,10 +190,17 @@ class openstack_project::static (
   # Docs-draft
 
   ::httpd::vhost { 'docs-draft.openstack.org':
-    port     => 80,
-    priority => '50',
-    docroot  => '/srv/static/docs-draft',
-    require  => File['/srv/static/docs-draft'],
+    port       => 443, # Is required despite not being used.
+    docroot    => '/srv/static/docs-draft',
+    priority   => '50',
+    ssl        => true,
+    template   => 'openstack_project/static-http-and-https.vhost.erb',
+    vhost_name => 'docs-draft.openstack.org',
+    require    => [
+      File['/srv/static/docs-draft'],
+      File[$cert_file],
+      File[$key_file],
+    ],
   }
 
   file { '/srv/static/docs-draft':
@@ -213,7 +227,7 @@ class openstack_project::static (
     docroot    => '/srv/static/security',
     priority   => '50',
     ssl        => true,
-    template   => 'openstack_project/security.vhost.erb',
+    template   => 'openstack_project/static-https-redirect.vhost.erb',
     vhost_name => 'security.openstack.org',
     require    => [
       File['/srv/static/security'],
@@ -229,25 +243,21 @@ class openstack_project::static (
     require => User['jenkins'],
   }
 
-  #TODO(fungi) this cleanup can be removed once puppet has deleted them
-  file { '/etc/ssl/certs/security.openstack.org.pem':
-    ensure  => absent,
-  }
-  file { '/etc/ssl/private/security.openstack.org.key':
-    ensure  => absent,
-  }
-  file { '/etc/ssl/certs/security.openstack.org_intermediate.pem':
-    ensure  => absent,
-  }
-
   ###########################################################
   # Governance
 
   ::httpd::vhost { 'governance.openstack.org':
-    port     => 80,
-    priority => '50',
-    docroot  => '/srv/static/governance',
-    require  => File['/srv/static/governance'],
+    port       => 443, # Is required despite not being used.
+    docroot    => '/srv/static/governance',
+    priority   => '50',
+    ssl        => true,
+    template   => 'openstack_project/static-http-and-https.vhost.erb',
+    vhost_name => 'governance.openstack.org',
+    require    => [
+      File['/srv/static/governance'],
+      File[$cert_file],
+      File[$key_file],
+    ],
   }
 
   file { '/srv/static/governance':
@@ -261,10 +271,17 @@ class openstack_project::static (
   # Specs
 
   ::httpd::vhost { 'specs.openstack.org':
-    port     => 80,
-    priority => '50',
-    docroot  => '/srv/static/specs',
-    require  => File['/srv/static/specs'],
+    port       => 443, # Is required despite not being used.
+    docroot    => '/srv/static/specs',
+    priority   => '50',
+    ssl        => true,
+    template   => 'openstack_project/static-http-and-https.vhost.erb',
+    vhost_name => 'specs.openstack.org',
+    require    => [
+      File['/srv/static/specs'],
+      File[$cert_file],
+      File[$key_file],
+    ],
   }
 
   file { '/srv/static/specs':
@@ -299,12 +316,18 @@ class openstack_project::static (
   # Trystack
 
   ::httpd::vhost { 'trystack.openstack.org':
-    port          => 80,
-    priority      => '50',
+    port          => 443, # Is required despite not being used.
     docroot       => '/opt/trystack',
-    template      => 'openstack_project/trystack.vhost.erb',
+    priority      => '50',
+    ssl           => true,
+    template      => 'openstack_project/static-http-and-https.vhost.erb',
+    vhost_name    => 'trystack.openstack.org',
     serveraliases => ['trystack.org', 'www.trystack.org'],
-    require       => Vcsrepo['/opt/trystack'],
+    require       => [
+      Vcsrepo['/opt/trystack'],
+      File[$cert_file],
+      File[$key_file],
+    ],
   }
 
   vcsrepo { '/opt/trystack':

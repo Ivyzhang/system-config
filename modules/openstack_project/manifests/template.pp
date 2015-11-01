@@ -25,6 +25,7 @@ class openstack_project::template (
       'pypi.iad.openstack.org',
       'pypi.ord.openstack.org',
       'pypi.region-b.geo-1.openstack.org',
+      'pypi.sjc1.openstack.org',
   ],
 ) {
 
@@ -308,7 +309,7 @@ class openstack_project::template (
         location => 'http://apt.puppetlabs.com',
         repos    => 'main',
         key      => {
-          'id'     =>'4BD6EC30',
+          'id'     =>'47B320EB4C7C375AA9DAE1A01054B7A24BD6EC30',
           'server' => 'pgp.mit.edu',
         },
       }
@@ -403,6 +404,15 @@ class openstack_project::template (
 
   service { 'puppet':
     ensure => stopped,
+  }
+
+  file { '/etc/puppet/hiera.yaml':
+    ensure  => present,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0555',
+    source  => 'puppet:///modules/openstack_project/puppet/hiera.yaml',
+    replace => true,
   }
   ###########################################################
 
