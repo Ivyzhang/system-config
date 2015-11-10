@@ -11,7 +11,7 @@ class openstack_project::server (
   $pin_puppet                = '3.',
   $ca_server                 = undef,
   $afs                       = false,
-  $puppetmaster_server       = 'puppetmaster.openstack.org',
+  $puppetmaster_server       = 'ci-puppet-master.openstacklocal',
   $manage_exim               = true,
   $pypi_index_url            = 'https://pypi.python.org/simple',
   $pypi_trusted_hosts        = [
