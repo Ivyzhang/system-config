@@ -13,9 +13,9 @@ node 'ci-puppet-master.openstacklocal' {
 
 node 'ci-zuul.openstacklocal' {
   class { 'openstack_project::zuul_prod':
-    project_config_repo            => 'https://git.openstack.org/openstack-infra/project-config',
+    project_config_repo            => 'ssh://xivgit.xiv.ibm.com/git/host/devops/openstack_ci/project_config.git',
     gerrit_server                  => 'review.openstack.org',
-    gerrit_user                    => 'jenkins',
+    gerrit_user                    => 'ibm_storage_ci',
     gerrit_ssh_host_key            => hiera('gerrit_ssh_rsa_pubkey_contents', 'XXX'),
     zuul_ssh_private_key           => hiera('zuul_ssh_private_key_contents', 'XXX'),
     url_pattern                    => 'http://logs.openstack.org/{build.parameters[LOG_PATH]}',
