@@ -1,7 +1,7 @@
 ---
 :hierarchy:
   # Use private hieradata first
-  - "hieradata/%{::environment}/fqdn/%{::fqdn}"
+  - "hieradata/fqdn/%{::fqdn}"
   - "hieradata/%{::environment}/group/%{group}" # no :: because group is set at nodescope
   - "hieradata/%{::environment}/common"
   # Use public hieradata second, also be environmentally aware
@@ -11,7 +11,7 @@
 :backends:
   - yaml
 :yaml:
-  :datadir: "/opt/system-config/"
+  :datadir: "/opt/ci_ibm_storage/deps/system_config"
 
 
 # File directory structure:
