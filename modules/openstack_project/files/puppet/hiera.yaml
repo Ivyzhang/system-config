@@ -11,7 +11,7 @@
 :backends:
   - yaml
 :yaml:
-  :datadir: "/opt/ci_ibm_storage/deps/system_config"
+  :datadir: "/opt/ci_ibm_storage/deps/system_config/"
 
 
 # File directory structure:
