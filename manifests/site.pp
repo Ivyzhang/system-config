@@ -17,7 +17,7 @@ node 'ci-zuul.openstacklocal' {
     gerrit_server                  => 'review.openstack.org',
     gerrit_user                    => 'ibm_storage_ci',
     gerrit_ssh_host_key            => hiera('gerrit_ssh_rsa_pubkey_contents', 'XXX'),
-    zuul_ssh_private_key           => hiera('zuul_ssh_private_key_contents', 'XXX'),
+    zuul_ssh_private_key           => hiera('zuul_ssh_private_key_contents'),
     url_pattern                    => 'http://logs.openstack.org/{build.parameters[LOG_PATH]}',
     swift_authurl                  => 'https://identity.api.rackspacecloud.com/v2.0/',
     swift_user                     => 'infra-files-rw',
