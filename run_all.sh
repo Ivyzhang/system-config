@@ -19,9 +19,10 @@
 # expect.
 set -e
 export ANSIBLE_LOG_PATH=/var/log/puppet_run_all.log
-ANSIBLE_PLAYBOOKS=/etc/ansible/playbooks
+SYSTEM_CONFIG=/opt/ci_ibm_storage/deps/system_config
+ANSIBLE_PLAYBOOKS=$SYSTEM_CONFIG/playbooks
 
-cd /opt/ci_ibm_storage/deps/system_config
+cd $SYSTEM_CONFIG
 git fetch -a && git reset -q --hard @{u}
 ./install_modules.sh
 bash /opt/ci_ibm_storage/bootstrap/ci-puppet-master/configure.sh
