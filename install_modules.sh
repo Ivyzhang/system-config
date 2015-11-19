@@ -38,17 +38,6 @@ declare -A SOURCE_MODULES
 # key:value is source location, revision to checkout
 declare -A INTEGRATION_MODULES
 
-
-#NOTE: if we previously installed kickstandproject-ntp we nuke it here
-# since puppetlabs-ntp and kickstandproject-ntp install to the same dir
-if grep kickstandproject-ntp /etc/puppet/modules/ntp/Modulefile &> /dev/null; then
-    remove_module "ntp"
-fi
-
-remove_module "gearman" #remove old saz-gearman
-remove_module "limits" # remove saz-limits (required by saz-gearman)
-remove_module "apache"
-
 # load modules.env to populate MODULES[*] and SOURCE_MODULES[*]
 # for processing.
 MODULE_ENV_FILE=${MODULE_FILE:-modules.env}
@@ -68,34 +57,16 @@ fi
 
 MODULE_LIST=`puppet module list --color=false`
 
-# Install all the modules
-for MOD in ${!MODULES[*]} ; do
-    # If the module at the current version does not exist upgrade or install it.
-    if ! echo $MODULE_LIST | grep "$MOD ([^v]*v${MODULES[$MOD]}" >/dev/null 2>&1 ; then
-        # Attempt module upgrade. If that fails try installing the module.
-        if ! puppet module upgrade $MOD --color=false --version ${MODULES[$MOD]} >/dev/null 2>&1 ; then
-            # This will get run in cron, so silence non-error output
-            puppet module install $MOD --color=false --version ${MODULES[$MOD]} >/dev/null
-        fi
-    fi
-done
-
-MODULE_LIST=`puppet module list --color=false`
-
-# Make a second pass, just installing modules from source
+# Install modules from source
 for MOD in ${!SOURCE_MODULES[*]} ; do
     # get the name of the module directory
     if [ `echo $MOD | awk -F. '{print $NF}'` = 'git' ]; then
         echo "Remote repos of the form repo.git are not supported: ${MOD}"
         exit 1
     fi
-    # NOTE(mtreinish): hack around incorrectly named openstack-health,
-    # remove after the gerrit rename
-    if [[ `echo $MOD | grep -c 'openstack-health'` -eq 1 ]]; then
-        MODULE_NAME="openstack_health"
-    else
-        MODULE_NAME=`echo $MOD | awk -F- '{print $NF}'`
-    fi
+
+    MODULE_NAME=`echo $MOD | awk -F- '{print $NF}'`
+
     # set up git base command to use the correct path
     GIT_CMD_BASE="git --git-dir=${MODULE_PATH}/${MODULE_NAME}/.git --work-tree ${MODULE_PATH}/${MODULE_NAME}"
     # treat any occurrence of the module as a match

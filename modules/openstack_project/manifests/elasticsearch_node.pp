@@ -25,6 +25,7 @@ class openstack_project::elasticsearch_node (
       'index.store.compress.stored'          => true,
       'index.store.compress.tv'              => true,
       'indices.memory.index_buffer_size'     => '33%',
+      'indices.breaker.fielddata.limit'      => '70%',
       'bootstrap.mlockall'                   => true,
       'gateway.recover_after_nodes'          => '5',
       'gateway.recover_after_time'           => '5m',
@@ -32,17 +33,24 @@ class openstack_project::elasticsearch_node (
       'discovery.zen.minimum_master_nodes'   => '4',
       'discovery.zen.ping.multicast.enabled' => false,
       'discovery.zen.ping.unicast.hosts'     => $discover_nodes,
+      'http.cors.enabled'                    => true,
+      'http.cors.allow-origin'               => "'*'", # lint:ignore:double_quoted_strings
     },
     heap_size          => $heap_size,
-    version            => '0.90.9',
+    version            => '1.7.3',
   }
 
   cron { 'delete_old_es_indices':
+    ensure      => 'absent',
     user        => 'root',
     hour        => '2',
     minute      => '0',
     command     => 'curl -sS -XDELETE "http://localhost:9200/logstash-`date -d \'10 days ago\' +\%Y.\%m.\%d`/" > /dev/null',
     environment => 'PATH=/usr/bin:/bin:/usr/sbin:/sbin',
+  }
+
+  class { 'logstash::curator':
+    keep_for_days  => '10',
   }
 
 }
