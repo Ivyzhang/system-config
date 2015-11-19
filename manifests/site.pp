@@ -8,6 +8,8 @@ node 'ci-puppet-master.openstacklocal' {
   }
   class { 'openstack_project::puppetmaster':
     root_rsa_key => hiera('puppetmaster_root_rsa_key', 'XXX'),
+    jenkins_api_user => hiera('jenkins_api_user', 'username'),
+    jenkins_api_key  => hiera('jenkins_api_key', 'XXX'),
   }
 }
 
@@ -16,7 +18,7 @@ node 'ci-zuul.openstacklocal' {
     project_config_repo            => 'ssh://xivgit.xiv.ibm.com/git/host/devops/openstack_ci/project_config.git',
     gerrit_server                  => 'review.openstack.org',
     gerrit_user                    => 'ibm_storage_ci',
-    gerrit_ssh_host_key            => hiera('gerrit_ssh_rsa_pubkey_contents', 'XXX'),
+    gerrit_ssh_host_key            => hiera('gerrit_ssh_rsa_pubkey_contents'),
     zuul_ssh_private_key           => hiera('zuul_ssh_private_key_contents'),
     url_pattern                    => 'http://logs.openstack.org/{build.parameters[LOG_PATH]}',
     swift_authurl                  => 'https://identity.api.rackspacecloud.com/v2.0/',
@@ -36,4 +38,27 @@ node 'ci-zuul.openstacklocal' {
     ],
   }
 }
+
+#node 'jenkins.openstack.org' {
+#  $group = "jenkins"
+#  $zmq_event_receivers = ['logstash.openstack.org',
+#                          'nodepool.openstack.org']
+#  $iptables_rule = regsubst ($zmq_event_receivers,
+#                             '^(.*)$', '-m state --state NEW -m tcp -p tcp --dport 8888 -s \1 -j ACCEPT')
+#  class { 'openstack_project::server':
+#    iptables_public_tcp_ports => [80, 443],
+#    iptables_rules6           => $iptables_rule,
+#    iptables_rules4           => $iptables_rule,
+#    sysadmins                 => hiera('sysadmins', []),
+#    puppetmaster_server       => 'puppetmaster.openstack.org',
+#  }
+#  class { 'openstack_project::jenkins':
+#    project_config_repo     => 'https://git.openstack.org/openstack-infra/project-config',
+#    jenkins_password        => hiera('jenkins_jobs_password'),
+#    jenkins_ssh_private_key => hiera('jenkins_ssh_private_key_contents'),
+#    ssl_cert_file           => '/etc/ssl/certs/ssl-cert-snakeoil.pem',
+#    ssl_key_file            => '/etc/ssl/private/ssl-cert-snakeoil.key',
+#    ssl_chain_file          => '',
+#  }
+#}
 
