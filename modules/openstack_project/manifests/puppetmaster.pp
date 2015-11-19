@@ -4,12 +4,19 @@ class openstack_project::puppetmaster (
   $jenkins_api_key,
   $jenkins_api_user = 'hudson-openstack',
   $root_rsa_key = 'xxx',
-  $puppetdb = true,
+  $puppetdb = false,
   $puppetdb_server = 'puppetdb.openstack.org',
+  $gaistr = "precedence ::ffff:0:0/96  100"
 ) {
   include logrotate
+  include openstack_project::server
   include openstack_project::params
 
+  file {'/etc/gai.conf':
+    ensure  => present,
+    mode    => '0644',
+    content => "$gaistr",
+  }
   file {'/etc/puppet/environments':
     ensure => directory,
     owner  => 'root',
@@ -176,10 +183,7 @@ class openstack_project::puppetmaster (
 # Playbooks
 #
   file { '/etc/ansible/playbooks':
-    ensure  => directory,
-    recurse => true,
-    source  => 'puppet:///modules/openstack_project/ansible/playbooks',
-    require => Class[ansible],
+    ensure => absent,
   }
 
   file { '/etc/ansible/remote_puppet.yaml':
