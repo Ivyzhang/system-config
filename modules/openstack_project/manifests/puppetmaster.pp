@@ -1,7 +1,7 @@
 # == Class: openstack_project::puppetmaster
 #
 class openstack_project::puppetmaster (
-  $jenkins_api_key,
+  $jenkins_api_key = 'xxx',
   $jenkins_api_user = 'hudson-openstack',
   $root_rsa_key = 'xxx',
   $puppetdb = false,
