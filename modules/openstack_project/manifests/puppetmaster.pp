@@ -5,6 +5,7 @@ class openstack_project::puppetmaster (
   $jenkins_api_user = 'hudson-openstack',
   $root_rsa_key = 'xxx',
   $puppetdb = false,
+  $update_cron = true,
   $puppetdb_server = 'puppetdb.openstack.org',
   $gaistr = "precedence ::ffff:0:0/96  100"
 ) {
@@ -47,11 +48,13 @@ class openstack_project::puppetmaster (
     require => Class['ansible'],
   }
 
-  cron { 'updatepuppetmaster':
-    user        => 'root',
-    minute      => '*/15',
-    command     => 'flock -n /var/run/puppet/puppet_run_all.lock bash /opt/ci_ibm_storage/deps/system_config/run_all.sh',
-    environment => 'PATH=/var/lib/gems/1.8/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',
+  if $update_cron {
+    cron { 'updatepuppetmaster':
+      user        => 'root',
+      minute      => '*/15',
+      command     => 'flock -n /var/run/puppet/puppet_run_all.lock bash /opt/ci_ibm_storage/deps/system_config/run_all.sh',
+      environment => 'PATH=/var/lib/gems/1.8/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',
+    }
   }
 
   logrotate::file { 'updatepuppetmaster':
@@ -157,14 +160,16 @@ class openstack_project::puppetmaster (
   }
 
 # Jenkins master management
-  cron { 'restartjenkinsmasters':
-    user        => 'root',
-    # Run through all masters onces a week.
-    weekday     => '6',
-    hour        => '0',
-    minute      => '15',
-    environment => 'PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',
-    command     => "flock -n /var/run/puppet/restart_jenkins_masters.lock ansible-playbook -f 1 /opt/system-config/production/playbooks/restart_jenkins_masters.yaml --extra-vars 'user=${jenkins_api_user} password=${jenkins_api_key}' >> /var/log/restart_jenkins_masters.log 2>&1",
+  if $update_cron {
+    cron { 'restartjenkinsmasters':
+      user        => 'root',
+      # Run through all masters onces a week.
+      weekday     => '6',
+      hour        => '0',
+      minute      => '15',
+      environment => 'PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',
+      command     => "flock -n /var/run/puppet/restart_jenkins_masters.lock ansible-playbook -f 1 /opt/system-config/production/playbooks/restart_jenkins_masters.yaml --extra-vars 'user=${jenkins_api_user} password=${jenkins_api_key}' >> /var/log/restart_jenkins_masters.log 2>&1",
+    }
   }
 
   logrotate::file { 'restartjenkinsmasters':
