@@ -55,20 +55,20 @@ class openstack_project::puppetmaster (
       command     => 'flock -n /var/run/puppet/puppet_run_all.lock bash /opt/ci_ibm_storage/deps/system_config/run_all.sh',
       environment => 'PATH=/var/lib/gems/1.8/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',
     }
-  }
 
-  logrotate::file { 'updatepuppetmaster':
-    ensure  => present,
-    log     => '/var/log/puppet_run_all.log',
-    options => ['compress',
-      'copytruncate',
-      'delaycompress',
-      'missingok',
-      'rotate 7',
-      'daily',
-      'notifempty',
-    ],
-    require => Cron['updatepuppetmaster'],
+    logrotate::file { 'updatepuppetmaster':
+      ensure  => present,
+      log     => '/var/log/puppet_run_all.log',
+      options => ['compress',
+        'copytruncate',
+        'delaycompress',
+        'missingok',
+        'rotate 7',
+        'daily',
+        'notifempty',
+      ],
+      require => Cron['updatepuppetmaster'],
+    }
   }
 
   cron { 'deleteoldreports':
@@ -170,20 +170,20 @@ class openstack_project::puppetmaster (
       environment => 'PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',
       command     => "flock -n /var/run/puppet/restart_jenkins_masters.lock ansible-playbook -f 1 /opt/system-config/production/playbooks/restart_jenkins_masters.yaml --extra-vars 'user=${jenkins_api_user} password=${jenkins_api_key}' >> /var/log/restart_jenkins_masters.log 2>&1",
     }
-  }
 
-  logrotate::file { 'restartjenkinsmasters':
-    ensure  => present,
-    log     => '/var/log/restart_jenkins_masters.log',
-    options => ['compress',
-      'copytruncate',
-      'delaycompress',
-      'missingok',
-      'rotate 7',
-      'daily',
-      'notifempty',
-    ],
-    require => Cron['restartjenkinsmasters'],
+    logrotate::file { 'restartjenkinsmasters':
+      ensure  => present,
+      log     => '/var/log/restart_jenkins_masters.log',
+      options => ['compress',
+        'copytruncate',
+        'delaycompress',
+        'missingok',
+        'rotate 7',
+        'daily',
+        'notifempty',
+      ],
+      require => Cron['restartjenkinsmasters'],
+    }
   }
 
 # Playbooks
