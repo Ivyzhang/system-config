@@ -18,7 +18,8 @@
 class openstack_project::git (
   $sysadmins = [],
   $balancer_member_names = [],
-  $balancer_member_ips = []
+  $balancer_member_ips = [],
+  $selinux_mode = 'enforcing'
 ) {
   class { 'openstack_project::server':
     iptables_public_tcp_ports => [80, 443, 9418],
@@ -27,7 +28,7 @@ class openstack_project::git (
 
   if ($::osfamily == 'RedHat') {
     class { 'selinux':
-      mode => 'enforcing'
+      mode => $selinux_mode
     }
   }
 
@@ -124,6 +125,14 @@ class openstack_project::git (
     ipaddresses       => $balancer_member_ips,
     ports             => '29418',
     options           => 'maxqueue 512',
+  }
+
+  exec { 'haproxy_allow_bind_ports':
+    # If bool is already set don't set it again
+    onlyif  => 'bash -c \'getsebool haproxy_connect_any | grep -q off\'',
+    command => 'setsebool -P haproxy_connect_any 1',
+    path    => '/bin:/usr/sbin',
+    before  => Service['haproxy'],
   }
 
   file { '/etc/rsyslog.d/haproxy.conf':

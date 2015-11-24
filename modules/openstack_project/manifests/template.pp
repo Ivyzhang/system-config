@@ -23,6 +23,7 @@ class openstack_project::template (
       'pypi.dfw.openstack.org',
       'pypi.gra1.openstack.org',
       'pypi.iad.openstack.org',
+      'pypi.nyj01.openstack.org',
       'pypi.ord.openstack.org',
       'pypi.region-b.geo-1.openstack.org',
       'pypi.regionone.openstack.org',
@@ -65,6 +66,10 @@ class openstack_project::template (
     public_udp_ports => $all_udp,
     rules4           => $iptables_rules4,
     rules6           => $iptables_rules6,
+  }
+
+  class { 'timezone':
+    timezone => 'Etc/UTC',
   }
 
 
