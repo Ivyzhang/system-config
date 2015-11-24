@@ -10,7 +10,7 @@ node 'ci-puppet-master.openstacklocal' {
     root_rsa_key => hiera('puppetmaster_root_rsa_key', 'XXX'),
     jenkins_api_user => hiera('jenkins_api_user', 'username'),
     jenkins_api_key  => hiera('jenkins_api_key', 'XXX'),
-    update_cron => hiera('update_cron', true)
+    update_cron => false
   }
 }
 
@@ -40,7 +40,7 @@ node 'ci-zuul.openstacklocal' {
   }
 }
 
-node 'jenkins.openstack.org' {
+node 'ci-jenkins-master.openstacklocal' {
 #  $group = "jenkins"
 #  $zmq_event_receivers = ['logstash.openstack.org',
 #                          'nodepool.openstack.org']
