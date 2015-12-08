@@ -19,6 +19,7 @@ class openstack_project::thick_slave(
     $::openstack_project::jenkins_params::gettext_package, # for msgfmt, used in translating manuals
     $::openstack_project::jenkins_params::gnome_doc_package, # for generating translation files for docs
     $::openstack_project::jenkins_params::graphviz_package, # for generating graphs in docs
+    $::openstack_project::jenkins_params::etcd_package, # for tooz unit tests
     $::openstack_project::jenkins_params::firefox_package, # for selenium tests
     $::openstack_project::jenkins_params::language_fonts_packages,
     $::openstack_project::jenkins_params::libcurl_dev_package,
@@ -134,6 +135,20 @@ class openstack_project::thick_slave(
         package { $::openstack_project::jenkins_params::mysql_package:
             ensure => present,
         }
+        if ($::operatingsystemrelease >= 22) {
+          # For pyeclib, used by swift
+          package { $::openstack_project::jenkins_params::liberasurecode_dev_package:
+            ensure => present,
+          }
+        }
+      }
+      elsif ($::operatingsystem == 'CentOS') {
+        if ($::operatingsystemmajrelease >= '7') {
+          # For pyeclib, used by swift
+          package { $::openstack_project::jenkins_params::liberasurecode_dev_package:
+            ensure => present,
+          }
+        }
       }
     }
     'Debian': {
@@ -144,6 +159,11 @@ class openstack_project::thick_slave(
 
       # For openstackid using php5-mcrypt for distro build
       package { $::openstack_project::jenkins_params::php5_mcrypt_package:
+        ensure => present,
+      }
+
+      # For pyeclib, used by swift
+      package { $::openstack_project::jenkins_params::liberasurecode_dev_package:
         ensure => present,
       }
     }

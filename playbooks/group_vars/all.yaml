@@ -1,1 +1,2 @@
 puppetmaster: ci-puppet-master.openstacklocal
+copy_hieradata: true

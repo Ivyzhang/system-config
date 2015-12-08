@@ -296,6 +296,10 @@ def main():
                  options.keep, options.net_label, options.floating_ip_pool,
                  options.boot_from_volume)
     dns.print_dns(client, options.name)
+    # Remove the ansible inventory cache so that next run finds the new
+    # server
+    if os.path.exists('/var/cache/ansible-inventory/ansible-inventory.cache'):
+        os.unlink('/var/cache/ansible-inventory/ansible-inventory.cache')
 
 if __name__ == '__main__':
     main()

@@ -20,6 +20,7 @@ class openstack_project::template (
   $sysadmins                 = [],
   $pypi_index_url            = 'https://pypi.python.org/simple',
   $pypi_trusted_hosts        = [
+      'pypi.bhs1.openstack.org',
       'pypi.dfw.openstack.org',
       'pypi.gra1.openstack.org',
       'pypi.iad.openstack.org',
@@ -278,10 +279,12 @@ class openstack_project::template (
     '2.7.': {
       $pin_facter = '1.'
       $pin_puppetdb = '1.'
+      $cfacter = false
     }
     /^3\./: {
       $pin_facter = '2.'
       $pin_puppetdb = '2.'
+      $cfacter = true
     }
     default: {
       fail("Puppet version not supported")
@@ -302,6 +305,12 @@ class openstack_project::template (
       refreshonly => true,
     }
 
+  }
+
+  if $cfacter {
+    package { 'cfacter':
+      ensure => latest,
+    }
   }
 
   # Which Puppet do I take?
@@ -418,6 +427,26 @@ class openstack_project::template (
     mode    => '0555',
     source  => 'puppet:///modules/openstack_project/puppet/hiera.yaml',
     replace => true,
+  }
+
+  file {'/etc/puppet/environments':
+    ensure => directory,
+    owner  => 'root',
+    group  => 'root',
+    mode   => '0755',
+  }
+  file {'/etc/puppet/environments/production':
+    ensure => directory,
+    owner  => 'root',
+    group  => 'root',
+    mode   => '0755',
+  }
+  file {'/etc/puppet/environments/production/environment.conf':
+    ensure => file,
+    owner  => 'root',
+    group  => 'root',
+    mode   => '0644',
+    source => 'puppet:///modules/openstack_project/puppet/production_environment.conf',
   }
   ###########################################################
 

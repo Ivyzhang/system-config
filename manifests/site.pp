@@ -2,14 +2,15 @@
 #node-OS: precise
 node 'ci-puppet-master.openstacklocal' {
   class { 'openstack_project::server':
-    iptables_public_tcp_ports => [4505, 4506, 8140],
+    iptables_public_tcp_ports => [8140],
     sysadmins                 => hiera('sysadmins', []),
     pin_puppet                => '3.6.',
   }
   class { 'openstack_project::puppetmaster':
-    root_rsa_key => hiera('puppetmaster_root_rsa_key', 'XXX'),
-    jenkins_api_user => hiera('jenkins_api_user', 'username'),
-    jenkins_api_key  => hiera('jenkins_api_key', 'XXX'),
+    root_rsa_key        => hiera('puppetmaster_root_rsa_key'),
+    jenkins_api_user    => hiera('jenkins_api_user', 'username'),
+    jenkins_api_key     => hiera('jenkins_api_key'),
+    puppetmaster_clouds => hiera('puppetmaster_clouds'),
     update_cron => hiera('update_cron')
   }
 }
@@ -30,7 +31,9 @@ node 'ci-zuul.openstacklocal' {
     swift_default_container        => 'infra-files',
     swift_default_logserver_prefix => 'http://logs.openstack.org/',
     swift_default_expiry           => 14400,
-    proxy_ssl_cert_file_contents   => '',
+    proxy_ssl_cert_file_contents   => hiera('zuul_ssl_cert_file_contents'),
+    proxy_ssl_key_file_contents    => hiera('zuul_ssl_key_file_contents'),
+    proxy_ssl_chain_file_contents  => hiera('zuul_ssl_chain_file_contents'),
     zuul_url                       => 'http://zuul.openstack.org/p',
     sysadmins                      => hiera('sysadmins', []),
     statsd_host                    => 'graphite.openstack.org',

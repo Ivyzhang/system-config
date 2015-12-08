@@ -16,33 +16,14 @@
 #
 # == Class: openstack_project::pbx
 class openstack_project::pbx (
-  $sysadmins = [],
   $sip_providers = [],
-  $selinux_mode = 'enforcing'
 ) {
-  class { 'openstack_project::server':
-    sysadmins                 => $sysadmins,
-    # SIP signaling is either TCP or UDP port 5060.
-    # RTP media (audio/video) uses a range of UDP ports.
-    iptables_public_tcp_ports => [5060],
-    iptables_public_udp_ports => [5060],
-    iptables_rules4           => ['-m udp -p udp --dport 10000:20000 -j ACCEPT'],
-    iptables_rules6           => ['-m udp -p udp --dport 10000:20000 -j ACCEPT'],
-  }
-
-  if ($::osfamily == 'RedHat') {
-    class { 'selinux':
-      mode => $selinux_mode
-    }
-  }
-
   realize (
     User::Virtual::Localuser['rbryant'],
     User::Virtual::Localuser['pabelanger'],
   )
 
   class { 'asterisk':
-    asterisk_conf_source  => 'puppet:///modules/openstack_project/pbx/asterisk/asterisk.conf',
     modules_conf_source   => 'puppet:///modules/openstack_project/pbx/asterisk/modules.conf',
   }
 

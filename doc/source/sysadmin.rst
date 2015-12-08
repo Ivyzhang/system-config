@@ -194,7 +194,7 @@ Backups
 Off-site backups are made to two servers:
 
  * ci-backup-rs-ord.openstack.org
- * ci-backup-hp-az1.openstack.org
+ * TBD
 
 Puppet is used to perform the initial configuration of those machines,
 but to protect them from unauthorized access in case access to the
@@ -285,14 +285,79 @@ Disable/Enable Puppet
 You should normally not make manual changes to servers, but instead,
 make changes through puppet.  However, under some circumstances, you
 may need to temporarily make a manual change to a puppet-managed
-resource on a server.  In that case, run the following command on that
-server to disable puppet::
+resource on a server.
 
-  sudo puppet agent --disable
+OpenStack Infra uses a non-trivial combination of Dynamic and Static
+Inventory in Ansible to control execution of puppet. A full understanding
+of the concepts in
+`Ansible Inventory Introduction
+<http://docs.ansible.com/ansible/intro_inventory.html>`_
+and
+`Ansible Dynamic Inventory
+<http://docs.ansible.com/ansible/intro_dynamic_inventory.html>`_
+is essential for being able to make informed decisions about actions
+to take.
 
-When you are ready for puppet to run again, use::
+In the case of needing to disable the running of puppet on a node, it's a
+simple matter of adding an entry to the ansible inventory "disabled" group.
+There are two inventory files available for this, `/etc/ansible/hosts/static`
+and `/etc/ansible/hosts/emergency`. `/etc/ansible/hosts/static` is intended
+to be managed via git from the system-config repo in
+`modules/openstack_project/files/puppetmaster/static-inventory`.
+`/etc/ansible/hosts/emergency` is a file that should normally be empty, but
+the contents are not managed by puppet. It's purpose is to allow for disabling
+puppet at times when landing a change to the puppet repo would be either
+unreasonable or impossible.
 
-  sudo puppet agent --enable
+There are two sections in each file, `disabled` and `disabled:children`. Due
+to the multi-cloud nature of the ansible inventory, a hostname cannot be counted
+on to be unique, so each cloud instance is listed in the inventory by its
+UUID with a group created for its hostname. If you want to disable a cloud
+instance by name, you need to put its name in `disabled:children`. If you want
+to refer to a single instance by UUID, or if there are statically defined
+hosts that need to be disabled, you should put those in `disabled`.
+
+Because of the way static and dynamic inventories get merged by ansible, the
+static file needs to stand alone. If you need to disable a dynamic host from
+OpenStack (pretty much all of our hosts) you need to not only add it to
+disabled:children, you need to add an emtpy group into the inventory file
+(either `static` or `emergency` as appropriate) too.
+
+Disabling puppet via ansible inventory does not disable puppet from being
+run directly on the host, it merely prevents the puppetmaster from causing
+puppet to be run. If you choose to run puppet manually on a host, take care
+to ensure that it has not been disabled at the puppetmaster level first.
+
+Examples
+--------
+
+To disable an OpenStack instance called `amazing.openstack.org` temporarily
+without landing a puppet change, ensure the following is in
+`/etc/ansible/hosts/emergency`
+
+::
+
+  [amazing.openstack.org]
+
+  [disabled:children]
+  amazing.openstack.org
+
+To disable one of the OpenStack instances called `git.openstack.org`
+temporarily without landing a puppet change but leaving the other running,
+find its UUID via OpenStack tools and ensure it's in the emergency file.
+
+::
+
+  [disabled]
+  811c5197-dba7-4d3a-a3f6-68ca5328b9a7
+
+To disable a staticly defined host that is not an OpenStack host, such as
+the Infra cloud controller hosts.
+
+::
+
+  [disabled]
+  controller.useast.openstack.org
 
 .. _cinder:
 
