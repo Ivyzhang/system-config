@@ -19,7 +19,7 @@
 # expect.
 set -e
 export ANSIBLE_LOG_PATH=/var/log/puppet_run_all.log
-SYSTEM_CONFIG=/opt/ci_ibm_storage/deps/system_config
+SYSTEM_CONFIG=/opt/ci_ibm_storage/deps/system_config/production
 ANSIBLE_PLAYBOOKS=$SYSTEM_CONFIG/playbooks
 
 cd $SYSTEM_CONFIG
