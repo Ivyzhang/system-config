@@ -53,7 +53,7 @@ class openstack_project::review_dev (
     ssh_replication_rsa_pubkey_contents => $ssh_replication_rsa_pubkey_contents,
     email                               => 'review-dev@openstack.org',
     war                                 =>
-      'http://tarballs.openstack.org/ci/gerrit/gerrit-v2.11.4.2.97fa846.war',
+      'http://tarballs.openstack.org/ci/gerrit/gerrit-v2.11.4.11.a14450f.war',
     contactstore                        => $contactstore,
     contactstore_appsec                 => $contactstore_appsec,
     contactstore_pubkey                 => $contactstore_pubkey,
@@ -105,7 +105,7 @@ class openstack_project::review_dev (
   }
 
   gerrit::plugin { 'javamelody':
-    version => 'c1fe093',
+    version => '3fefa35',
   }
 
   package { 'python-launchpadlib':

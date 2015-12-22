@@ -40,6 +40,7 @@ class openstack_project::eavesdrop (
         '#dox',
         '#heat',
         '#kolla',
+        '#midonet',
         '#murano',
         '#openstack',
         '#openstack-ansible',
@@ -47,7 +48,6 @@ class openstack_project::eavesdrop (
         '#openstack-app-catalog',
         '#openstack-barbican',
         '#openstack-blazar',
-        '#openstack-ceilometer',
         '#openstack-chef',
         '#openstack-cinder',
         '#openstack-cloudpulse',
@@ -59,6 +59,7 @@ class openstack_project::eavesdrop (
         '#openstack-diversity',
         '#openstack-dns',
         '#openstack-doc',
+        '#openstack-dragonflow',
         '#openstack-fr',
         '#openstack-freezer',
         '#openstack-glance',
@@ -106,11 +107,13 @@ class openstack_project::eavesdrop (
         '#openstack-swauth',
         '#openstack-swift',
         '#openstack-tailgate',
+        '#openstack-telemetry',
         '#openstack-trove',
         '#openstack-ux',
         '#openstack-vmware-nsx',
         '#openstack-watcher',
         '#openstack-zaqar',
+        '#openstack-zephyr',
         '#puppet-openstack',
         '#refstack',
         '#senlin',
@@ -141,8 +144,10 @@ class openstack_project::eavesdrop (
     require => Class['statusbot'],
   }
 
-  httpd_mod { 'headers':
-    ensure => present,
+  if ! defined(Httpd::Mod['headers']) {
+    httpd::mod { 'headers':
+        ensure => present,
+    }
   }
 
   class { 'project_config':

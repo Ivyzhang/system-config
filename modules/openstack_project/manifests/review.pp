@@ -112,9 +112,10 @@ class openstack_project::review (
     core_packedgitlimit                 => '400m',
     core_packedgitwindowsize            => '16k',
     sshd_threads                        => '100',
+    index_threads                       => 4,
     httpd_maxwait                       => '5000min',
     war                                 =>
-      'http://tarballs.openstack.org/ci/gerrit/gerrit-v2.8.4.19.4548330.war',
+      'http://tarballs.openstack.org/ci/gerrit/gerrit-v2.11.4.11.a14450f.war',
     contactstore                        => $contactstore,
     contactstore_appsec                 => $contactstore_appsec,
     contactstore_pubkey                 => $contactstore_pubkey,
@@ -212,7 +213,7 @@ class openstack_project::review (
   }
 
   gerrit::plugin { 'javamelody':
-    version => 'c1fe093',
+    version => '3fefa35',
   }
 
   class { 'gerritbot':
