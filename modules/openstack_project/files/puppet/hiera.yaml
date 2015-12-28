@@ -11,7 +11,8 @@
 :backends:
   - yaml
 :yaml:
-  :datadir: "/opt/system-config/"
+  #:datadir: "/opt/system-config/"
+  :datadir: "/opt/system-config/production"
 
 
 # File directory structure:
