@@ -1,3 +1,9 @@
+zuul_ssl_key_file_contents: ''
+    
+zuul_ssl_chain_file_contents: ''
+
+zuul_ssl_cert_file_contents: ''
+
 zuul_ssh_private_key_contents: |-
     -----BEGIN RSA PRIVATE KEY-----
     MIIEowIBAAKCAQEAtqiCWvXwNJQX/rgXq54Z6hy0CdLOFQiTKOyHgNl8ADvUZ7Cr
