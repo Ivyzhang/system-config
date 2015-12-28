@@ -14,6 +14,7 @@ class openstack_project::puppetmaster (
   include openstack_project::server
   include openstack_project::params
 
+  notice("IBM Storage CI: environment: ${::environment}")
   file {'/etc/gai.conf':
     ensure  => present,
     mode    => '0644',
@@ -203,7 +204,7 @@ class openstack_project::puppetmaster (
     owner   => 'root',
     group   => 'root',
     mode    => '0755',
-    source  => '/opt/ansible/contrib/inventory/openstack.py',
+    source  => '/usr/local/bin/puppet-inventory'
     replace => true,
     require => Vcsrepo['/opt/ansible'],
   }
