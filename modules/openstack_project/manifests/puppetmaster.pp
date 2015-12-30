@@ -7,6 +7,12 @@ class openstack_project::puppetmaster (
   $root_rsa_key = 'xxx',
   $puppetdb = false,
   $update_cron = true,
+  $puppetmaster_update_cron_interval = { min     => '*/15',
+                                         hour    => '*',
+                                         day     => '*',
+                                         month   => '*',
+                                         weekday => '*',
+                                       },
   $puppetdb_server = 'puppetdb.openstack.org',
   $gaistr = "precedence ::ffff:0:0/96  100"
 ) {
@@ -35,7 +41,11 @@ class openstack_project::puppetmaster (
   if $update_cron {
     cron { 'updatepuppetmaster':
       user        => 'root',
-      minute      => '*/15',
+      minute      => $puppetmaster_update_cron_interval[min],
+      hour        => $puppetmaster_update_cron_interval[hour],
+      monthday    => $puppetmaster_update_cron_interval[day],
+      month       => $puppetmaster_update_cron_interval[month],
+      weekday     => $puppetmaster_update_cron_interval[weekday],
       command     => 'flock -n /var/run/puppet/puppet_run_all.lock bash /opt/system-config/production/run_all.sh',
       environment => 'PATH=/var/lib/gems/1.8/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',
     }

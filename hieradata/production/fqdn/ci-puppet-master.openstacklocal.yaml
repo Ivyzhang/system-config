@@ -1,5 +1,9 @@
 update_cron: false
 
+cron_interval:
+    min: "*/15"
+    hour: "*"
+
 puppetmaster_root_rsa_key: xxx
 
 jenkins_api_key: "123"
