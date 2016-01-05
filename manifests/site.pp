@@ -45,7 +45,7 @@ node 'ci-zuul.openstacklocal' {
 
 node 'ci-jenkins-master.openstacklocal' {
   $group = "jenkins"
-  $zmq_event_receivers = ['nodepool.openstack.org']
+  $zmq_event_receivers = ['ci-nodepool.openstacklocal']
   $iptables_rule = regsubst ($zmq_event_receivers,
                              '^(.*)$', '-m state --state NEW -m tcp -p tcp --dport 8888 -s \1 -j ACCEPT')
   class { 'openstack_project::server':
