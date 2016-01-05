@@ -70,4 +70,24 @@ node 'ci-nodepool.openstacklocal' {
     sysadmins                 => hiera('sysadmins', []),
     iptables_public_tcp_ports => [80],
   }
+
+  class { '::openstackci::nodepool':
+    vhost_name               => 'ci-nodepool.openstacklocal',
+    project_config_repo      => 'ssh://xivgit.xiv.ibm.com/git/host/devops/openstack_ci/project_config.git',
+    mysql_password           => hiera('nodepool_mysql_password'),
+    mysql_root_password      => hiera('nodepool_mysql_root_password'),
+    nodepool_ssh_private_key => hiera('jenkins_ssh_private_key_contents'),
+    oscc_file_contents       => '',
+    image_log_document_root  => '/var/log/nodepool/image',
+    logging_conf_template    => 'openstack_project/nodepool/nodepool.logging.conf.erb',
+    jenkins_masters          => [
+      {
+        name        => 'ci-jenkins-master',
+        url         => 'https://9.151.163.149/',
+        user        => hiera('jenkins_api_user', 'username'),
+        apikey      => hiera('jenkins_api_key'),
+        credentials => hiera('jenkins_credentials_id'),
+      },
+    ],
+  }
 }
