@@ -38,7 +38,7 @@ node 'ci-zuul.openstacklocal' {
     sysadmins                      => hiera('sysadmins', []),
     statsd_host                    => 'graphite.openstack.org',
     gearman_workers                => [
-      'nodepool.openstack.org',
+      'ci-nodepool.openstacklocal',
     ],
   }
 }
