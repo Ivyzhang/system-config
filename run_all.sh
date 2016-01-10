@@ -23,8 +23,11 @@ SYSTEM_CONFIG=/opt/system-config/production
 ANSIBLE_PLAYBOOKS=$SYSTEM_CONFIG/playbooks
 
 cd $SYSTEM_CONFIG
-git fetch -a && git reset -q --hard @{u}
-./install_modules.sh
+if [ "$1" != "dry-run" ]; then
+  git fetch -a && git reset -q --hard @{u}
+  ./install_modules.sh
+fi
+
 #bash /opt/ci_ibm_storage/bootstrap/ci-puppet-master/configure.sh
 ansible-galaxy install --force -r roles.yaml
 
