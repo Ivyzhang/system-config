@@ -167,8 +167,8 @@ The bot also has the ability to sit in a channel for the sole purpose
 of logging channel activity, not just meetings. Standard channel logs
 are sent to http://eavesdrop.openstack.org/irclogs/
 
-The configuration for specific channel logging can be found in
-:file:`modules/openstack_project/manifests/eavesdrop.pp`.
+The configuration for specific channel logging can be found in the
+public Hiera data file, :file:`hiera/common.yaml`.
 
 .. _statusbot:
 
@@ -208,6 +208,9 @@ the channels the bot is listening to:
   Log a message of success to the "Successes" wiki page. This is meant
   as a collection mechanism for little celebration of small successes
   in OpenStack development.
+
+A channel can be added to statusbot by editing the public Hiera data
+file, :file:`hiera/common.yaml`.
 
 .. _gerritbot:
 
@@ -317,3 +320,27 @@ Tips
    the new channel.
  * Don't leave the channel until everything is done, it's non-trivial to
    rejoin because you've set up a forward!
+
+Troubleshooting
+===============
+
+Bots may stop responding, common steps to troubleshoot the problem are:
+
+1. Check status of the bot, with:
+
+    service xxxbot status
+
+If bot is stopped, start it again. Restart the bot if you see it's running
+but not operating properly.
+
+2. On bot restart, it may show problems connecting to chat.freenode.net.
+If bot logs show it's stopped on connection, you can manually try with:
+
+    telnet chat.freenode.net 6667
+
+3. For bots on the eavesdrop server: if you don't have connection to that
+port, check entries on /etc/hosts for chat.freenode.net, until you find one
+server that is operative. Switch the entries on /etc/hosts to choose
+the right one, and restart the service with:
+
+    sudo service xxxbot restart

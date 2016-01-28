@@ -1,0 +1,19 @@
+---
+<<<<<<< HEAD
+- hosts: '!ci-puppet-master.openstacklocal:!disabled'
+=======
+- hosts: "localhost:!disabled"
+  connection: local
+>>>>>>> 16e99c61ad9f45d0a133749e86963a3c06d63d2e
+  gather_facts: false
+  tasks:
+  - git:
+      repo: https://git.openstack.org/openstack-infra/system-config
+      dest: /opt/system-config/production
+      force: yes
+  - shell: ./install_modules.sh
+    args:
+      chdir: /opt/system-config/production
+  - shell: ansible-galaxy install --force -r roles.yaml
+    args:
+      chdir: /opt/system-config/production

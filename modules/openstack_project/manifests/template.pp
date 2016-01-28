@@ -16,19 +16,29 @@ class openstack_project::template (
   $enable_unbound            = false,
   $afs                       = false,
   $puppetmaster_server       = 'ci-puppet-master.openstacklocal',
+  $afs_cache_size            = 500000,
   $manage_exim               = false,
   $sysadmins                 = [],
   $pypi_index_url            = 'https://pypi.python.org/simple',
   $pypi_trusted_hosts        = [
-      'pypi.bhs1.openstack.org',
-      'pypi.dfw.openstack.org',
-      'pypi.gra1.openstack.org',
-      'pypi.iad.openstack.org',
-      'pypi.nyj01.openstack.org',
-      'pypi.ord.openstack.org',
-      'pypi.region-b.geo-1.openstack.org',
-      'pypi.regionone.openstack.org',
+    'pypi.bhs1.openstack.org',
+    'pypi.dfw.openstack.org',
+    'pypi.gra1.openstack.org',
+    'pypi.iad.openstack.org',
+    'pypi.nyj01.openstack.org',
+    'pypi.ord.openstack.org',
+    'pypi.region-b.geo-1.openstack.org',
+    'pypi.regionone.openstack.org',
+    'mirror.bhs1.ovh.openstack.org',
+    'mirror.dfw.rax.openstack.org',
+    'mirror.gra1.ovh.openstack.org',
+    'mirror.iad.rax.openstack.org',
+    'mirror.nyj01.internap.openstack.org',
+    'mirror.ord.rax.openstack.org',
+    'mirror.region-b.geo-1.hpcloud.openstack.org',
+    'mirror.regionone.bluebox-sjc1.openstack.org',
   ],
+  $purge_apt_sources         = false,
 ) {
 
   ###########################################################
@@ -53,6 +63,7 @@ class openstack_project::template (
       cell         => 'openstack.org',
       realm        => 'OPENSTACK.ORG',
       admin_server => 'kdc.openstack.org',
+      cache_size   => $afs_cache_size,
       kdcs         => [
         'kdc01.openstack.org',
         'kdc02.openstack.org',
@@ -197,7 +208,19 @@ class openstack_project::template (
 
   case $::osfamily {
     'Debian': {
-      include apt
+      # Purge and augment existing /etc/apt/sources.list if requested
+      class { '::apt':
+        purge => { 'sources.list' => $purge_apt_sources }
+      }
+      if $purge_apt_sources == true {
+        file { '/etc/apt/sources.list.d/openstack-infra.list':
+          ensure => present,
+          group  => 'root',
+          mode   => '0444',
+          owner  => 'root',
+          source => "puppet:///modules/openstack_project/sources.list.${::lsbdistcodename}",
+        }
+      }
 
       # Make sure dig is installed
       package { 'dnsutils':
@@ -219,6 +242,9 @@ class openstack_project::template (
   class { '::pip':
     index_url       => $pypi_index_url,
     trusted_hosts   => $pypi_trusted_hosts,
+    optional_settings => {
+      'extra-index-url' => '',
+    },
     manage_pip_conf => true,
   }
 
@@ -269,6 +295,12 @@ class openstack_project::template (
   ssh_authorized_key { '/root/.ssh/authorized_keys':
     ensure  => absent,
     user    => 'root',
+  }
+
+  file_line { 'ensure NoRoaming for ssh clients':
+    after => '^Host *',
+    path  => '/etc/ssh/ssh_config',
+    line  => '    UseRoaming no',
   }
 
   ###########################################################

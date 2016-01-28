@@ -7,14 +7,14 @@ class openstack_project::puppetmaster (
   $root_rsa_key = 'xxx',
   $puppetdb = false,
   $update_cron = true,
+  $puppetdb_server = 'puppetdb.openstack.org',
+  $gaistr = "precedence ::ffff:0:0/96  100"
   $puppetmaster_update_cron_interval = { min     => '*/15',
                                          hour    => '*',
                                          day     => '*',
                                          month   => '*',
                                          weekday => '*',
                                        },
-  $puppetdb_server = 'puppetdb.openstack.org',
-  $gaistr = "precedence ::ffff:0:0/96  100"
 ) {
   include logrotate
   include openstack_project::server
@@ -65,11 +65,25 @@ class openstack_project::puppetmaster (
     }
   }
 
+  logrotate::file { 'updatepuppetmastercron':
+    ensure  => present,
+    log     => '/var/log/puppet_run_all_cron.log',
+    options => ['compress',
+      'copytruncate',
+      'delaycompress',
+      'missingok',
+      'rotate 7',
+      'daily',
+      'notifempty',
+    ],
+    require => Cron['updatepuppetmaster'],
+  }
+
   cron { 'deleteoldreports':
     user        => 'root',
     hour        => '3',
     minute      => '0',
-    command     => 'sleep $((RANDOM\%600)) && find /var/lib/puppet/reports -name \'*.yaml\' -mtime +7 -execdir rm {} \;',
+    command     => 'sleep $((RANDOM\%600)) && find /var/lib/puppet/reports -name \'*.yaml\' -mtime +5 -execdir rm {} \;',
     environment => 'PATH=/var/lib/gems/1.8/bin:/usr/bin:/bin:/usr/sbin:/sbin',
   }
 
@@ -220,10 +234,7 @@ class openstack_project::puppetmaster (
   }
 
   file { '/etc/ansible/hosts/static':
-    owner   => 'root',
-    group   => 'root',
-    mode    => '0444',
-    source  => 'puppet:///modules/openstack_project/puppetmaster/static-inventory',
+    ensure => absent,
   }
 
   file { '/etc/ansible/hosts/emergency':
@@ -232,4 +243,27 @@ class openstack_project::puppetmaster (
     group   => 'root',
     mode    => '0644',
   }
+
+  file { '/etc/ansible/groups.txt':
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0444',
+    source  => 'puppet:///modules/openstack_project/puppetmaster/groups.txt',
+    notify => Exec['expand_groups'],
+  }
+
+  file { '/usr/local/bin/expand-groups.sh':
+    owner  => 'root',
+    group  => 'root',
+    mode   => '0755',
+    source => 'puppet:///modules/openstack_project/puppetmaster/expand-groups.sh',
+    notify => Exec['expand_groups'],
+  }
+
+  exec { 'expand_groups':
+    command     => 'expand-groups.sh',
+    path        => '/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',
+    refreshonly => true,
+  }
+
 }

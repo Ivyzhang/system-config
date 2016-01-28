@@ -1,0 +1,9 @@
+<<<<<<< HEAD
+puppetmaster: ci-puppet-master.openstacklocal
+=======
+>>>>>>> 16e99c61ad9f45d0a133749e86963a3c06d63d2e
+copy_hieradata: true
+copy_puppet: true
+manifest: /opt/system-config/production/manifests/site.pp
+manifest_base: /opt/system-config
+puppetdb: https://puppetdb.openstack.org:8081
