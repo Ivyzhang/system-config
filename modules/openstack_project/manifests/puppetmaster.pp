@@ -8,7 +8,7 @@ class openstack_project::puppetmaster (
   $puppetdb = false,
   $update_cron = true,
   $puppetdb_server = 'puppetdb.openstack.org',
-  $gaistr = "precedence ::ffff:0:0/96  100"
+  $gaistr = "precedence ::ffff:0:0/96  100",
   $puppetmaster_update_cron_interval = { min     => '*/15',
                                          hour    => '*',
                                          day     => '*',
