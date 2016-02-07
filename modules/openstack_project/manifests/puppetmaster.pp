@@ -63,28 +63,28 @@ class openstack_project::puppetmaster (
       ],
       require => Cron['updatepuppetmaster'],
     }
-  }
 
-  logrotate::file { 'updatepuppetmastercron':
-    ensure  => present,
-    log     => '/var/log/puppet_run_all_cron.log',
-    options => ['compress',
-      'copytruncate',
-      'delaycompress',
-      'missingok',
-      'rotate 7',
-      'daily',
-      'notifempty',
-    ],
-    require => Cron['updatepuppetmaster'],
-  }
+    logrotate::file { 'updatepuppetmastercron':
+      ensure  => present,
+      log     => '/var/log/puppet_run_all_cron.log',
+      options => ['compress',
+        'copytruncate',
+        'delaycompress',
+        'missingok',
+        'rotate 7',
+        'daily',
+        'notifempty',
+      ],
+      require => Cron['updatepuppetmaster'],
+    }
 
-  cron { 'deleteoldreports':
-    user        => 'root',
-    hour        => '3',
-    minute      => '0',
-    command     => 'sleep $((RANDOM\%600)) && find /var/lib/puppet/reports -name \'*.yaml\' -mtime +5 -execdir rm {} \;',
-    environment => 'PATH=/var/lib/gems/1.8/bin:/usr/bin:/bin:/usr/sbin:/sbin',
+    cron { 'deleteoldreports':
+      user        => 'root',
+      hour        => '3',
+      minute      => '0',
+      command     => 'sleep $((RANDOM\%600)) && find /var/lib/puppet/reports -name \'*.yaml\' -mtime +5 -execdir rm {} \;',
+      environment => 'PATH=/var/lib/gems/1.8/bin:/usr/bin:/bin:/usr/sbin:/sbin',
+    }
   }
 
   file { '/var/lib/puppet/reports':
