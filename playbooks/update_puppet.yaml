@@ -10,7 +10,7 @@
   - shell: ./install_modules.sh
     args:
       chdir: /opt/system-config/production
-    when: dry-run is not defined
+    when: dry_run is not defined
   - shell: ansible-galaxy install --force -r roles.yaml
     args:
       chdir: /opt/system-config/production
