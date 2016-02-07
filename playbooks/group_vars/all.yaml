@@ -1,4 +1,3 @@
-puppetmaster: ci-puppet-master.openstacklocal
 copy_hieradata: true
 copy_puppet: true
 manifest: /opt/system-config/production/manifests/site.pp
