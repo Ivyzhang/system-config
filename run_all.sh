@@ -27,8 +27,13 @@ ANSIBLE_PLAYBOOKS=$SYSTEM_CONFIG/playbooks
 # errexit
 set +e
 
-# First, sync the puppet repos with all the machines
-ansible-playbook -f 20 ${ANSIBLE_PLAYBOOKS}/update_puppet.yaml
+if [ "$1" != "dry-run" ]; then
+    # First, sync the puppet repos with all the machines
+    ansible-playbook -f 20 ${ANSIBLE_PLAYBOOKS}/update_puppet.yaml
+else
+    ansible-playbook -f 20 ${ANSIBLE_PLAYBOOKS}/update_puppet.yaml --extra-vars "dry-run=y"
+fi
+
 # Run the git/gerrit sequence, since it's important that they all work together
 ansible-playbook -f 10 ${ANSIBLE_PLAYBOOKS}/remote_puppet_git.yaml
 # Run AFS changes separately so we can make sure to only do one at a time
