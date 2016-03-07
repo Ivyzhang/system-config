@@ -131,6 +131,26 @@ keys. e.g.::
   sudo su - gerrit2
   ssh github.com
 
+Troubleshooting
+---------------
+When creating a new project, there can be times where the :ref:`jeepyb`
+automation to create the GitHub project can fail, and leave the project
+improperly configured.
+This can cause replication to GitHub to fail. The project in GitHub will
+be created, but will appear empty. When trying replication from Gerrit,
+it will show a `Permission denied` error when trying to push content.
+To solve that, following steps are needed:
+
+ #. Login into github.com, using openstack-project-creator user.
+
+ #. Navigate to the failed repository, and enter on Settings > Collaborators
+ & teams option.
+
+ #. Add Gerrit as Team member to that project.
+
+After the team has been added, project will start replicating successfully
+to GitHub.
+
 
 Auto Review Expiry
 ==================
@@ -648,3 +668,49 @@ update queries for account_patch_reviews and starred_changes with:
 
 The other update queries can be ignored, since deleting them in many
 cases would result in loss of legitimate review history.
+
+Refreshing HTML and CSS configuration
+-------------------------------------
+
+When there is a change in HTML headers, or CSS, this can be applied
+without the need of restarting Gerrit. To do that, ssh in the Gerrit
+instance, and touch GerritSiteHeader.html and/or GerritSite.css,
+under /home/gerrit2/review_site/etc directory.
+
+Deactivating a Gerrit account
+-----------------------------
+
+To deactivate a Gerrit account (use case can be a failing Third Party CI), you
+must follow that steps:
+
+1. Identify the account ID of the Third Party CI you need to deactivate. Third-Party CI
+   members can be found on: https://review.openstack.org/#/admin/groups/270,members
+
+   That will give you the name and email of all members. Then you can get the matching
+   numerical account ID with the help of REST API:
+   curl -i -H "Accept: application/json" --digest --user <<gerrit_user>>:<<http_pass>> -X GET https://review.openstack.org/a/accounts/{email}
+
+   This will return a JSON dictionary, that will contain _account_id field.
+
+2. Mark the account as inactive using gerrit ssh api, with:
+   ssh -p 29418 review.openstack.org gerrit set-account --inactive {account-id}
+
+   Alternatively you can use REST API, sending a DELETE for:
+   curl -i -H "Accept: application/json" --digest --user <<gerrit_user>>:<<http_pass>> -X DELETE https://review.openstack.org/a/accounts/{account-id}/active
+
+3. Check if there are active gerrit ssh connections:
+   ssh -p 29418 review.openstack.org gerrit show-connections -n | grep {account-id}
+
+   And kill all of them with subsequent:
+   ssh -p 29418 review.openstack.org gerrit close-connection {connection-id}
+
+4. You can check if the account is properly marked as inactive using REST API,
+   sending a GET for:
+
+   curl -i -H "Accept: application/json" --digest --user <<gerrit_user>>:<<http_pass>> -X GET https://review.openstack.org/a/accounts/{account-id}/active
+
+   A 200 return code means the account is active, and 204 means account inactive.
+
+4. In the case of a failing Third Party CI, if the account caused a loop of comments in
+   a change, you can delete them with following query:
+   delete from change_messages where author_id={account-id} and change_id={change-id};

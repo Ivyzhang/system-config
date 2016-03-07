@@ -42,6 +42,13 @@ function is_opensuse {
         cat /etc/os-release | grep -q -e "openSUSE"
 }
 
+# dnf is a drop-in replacement for yum on Fedora>=22
+YUM=yum
+if is_fedora && [[ $(lsb_release -rs) -ge 22 ]]; then
+    YUM=dnf
+fi
+
+
 #
 # Distro specific puppet installs
 #
@@ -51,16 +58,17 @@ function _systemd_update {
     # services due to selinux errors after upgrade.  A work-around is
     # to install the latest version of selinux and systemd here and
     # restart the daemon for good measure after it is upgraded.
-    yum install -y selinux-policy
-    yum install -y systemd
+    $YUM install -y selinux-policy
+    $YUM install -y systemd
     systemctl daemon-reload
 }
 
 function setup_puppet_fedora {
     _systemd_update
-    yum update -y
 
-    # NOTE: we preinstall lsb_release to ensure facter sets
+    $YUM update -y
+
+    # NOTE: we preinstall lsb_release here to ensure facter sets
     # lsbdistcodename
     #
     # Fedora declares some global hardening flags, which distutils
@@ -70,7 +78,7 @@ function setup_puppet_fedora {
     # https://bugzilla.redhat.com/show_bug.cgi?id=1217376) and can be
     # removed when that is sorted out.
 
-    yum install -y redhat-lsb-core git puppet \
+    $YUM install -y redhat-lsb-core git puppet \
         redhat-rpm-config
 
     mkdir -p /etc/puppet/modules/
@@ -216,6 +224,23 @@ function setup_pip {
 
     python get-pip.py -c <(echo 'pip<8')
     rm get-pip.py
+
+    # we are about to overwrite setuptools, but some packages we
+    # install later might depend on the python-setuptools package.  To
+    # avoid later conflicts, and because distro packages don't include
+    # enough info for pip to certain it can fully uninstall the old
+    # package, for safety we clear it out by hand (this seems to have
+    # been a problem with very old to new updates, e.g. centos6 to
+    # current-era, but less so for smaller jumps).  There is a bit of
+    # chicken-and-egg problem with pip in that it requires setuptools
+    # for some operations, such as wheel creation.  But just
+    # installing setuptools shouldn't require setuptools itself, so we
+    # are safe for this small section.
+    if is_rhel7 || is_fedora; then
+        yum install -y python-setuptools
+        rm -rf /usr/lib/python2.7/site-packages/setuptools*
+    fi
+
     pip install -U setuptools
 }
 

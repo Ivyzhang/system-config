@@ -3,6 +3,7 @@
 class openstack_project::puppetmaster (
   $jenkins_api_key = 'xxx',
   $puppetmaster_clouds = '',
+  $infracloud_hpuswest_ssl_cert_file_contents,
   $jenkins_api_user = 'hudson-openstack',
   $root_rsa_key = 'xxx',
   $puppetdb = false,
@@ -87,6 +88,14 @@ class openstack_project::puppetmaster (
     }
   }
 
+  cron { 'deleteoldreports-json':
+    user        => 'root',
+    hour        => '3',
+    minute      => '0',
+    command     => 'sleep $((RANDOM\%600)) && find /var/lib/puppet/reports -name \'*.json\' -mtime +5 -execdir rm {} \;',
+    environment => 'PATH=/var/lib/gems/1.8/bin:/usr/bin:/bin:/usr/sbin:/sbin',
+  }
+
   file { '/var/lib/puppet/reports':
     ensure => directory,
     owner  => 'puppet',
@@ -125,9 +134,25 @@ class openstack_project::puppetmaster (
   file { '/etc/openstack/clouds.yaml':
     ensure  => present,
     owner   => 'root',
-    group   => 'root',
-    mode    => '0600',
+    group   => 'admin',
+    mode    => '0660',
     content => template('openstack_project/puppetmaster/ansible-clouds.yaml.erb'),
+  }
+
+  file { '/etc/openstack/all-clouds.yaml':
+    ensure  => present,
+    owner   => 'root',
+    group   => 'admin',
+    mode    => '0660',
+    content => template('openstack_project/puppetmaster/all-clouds.yaml.erb'),
+  }
+
+  file { '/etc/openstack/infracloud_west_cacert.pem':
+    ensure  => absent,
+    owner   => 'root',
+    group   => 'admin',
+    mode    => '0660',
+    content => $infracloud_hpuswest_ssl_cert_file_contents,
   }
 
 # For puppet master apache serving.
@@ -209,6 +234,9 @@ class openstack_project::puppetmaster (
     }
   }
 
+  # Ansible mgmt
+  # TODO: Put this into its own class, maybe called bastion::ansible or something
+
   vcsrepo { '/opt/ansible':
     ensure   => latest,
     provider => git,
@@ -242,6 +270,14 @@ class openstack_project::puppetmaster (
     owner   => 'root',
     group   => 'root',
     mode    => '0644',
+  }
+
+  file { '/etc/ansible/hosts/infracloud':
+    ensure  => present,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0644',
+    source  => 'puppet:///modules/openstack_project/puppetmaster/infracloud',
   }
 
   file { '/etc/ansible/groups.txt':

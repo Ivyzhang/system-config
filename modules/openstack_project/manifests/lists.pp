@@ -60,11 +60,29 @@ class openstack_project::lists(
     mailserver  => $listdomain,
   }
 
+  maillist { 'openstack-de':
+    ensure      => present,
+    admin       => 'christian@berendt.io',
+    password    => $listpassword,
+    description => 'List for German-speaking OpenStack users',
+    webserver   => $listdomain,
+    mailserver  => $listdomain,
+  }
+
   maillist { 'openstack-i18n':
     ensure      => present,
     admin       => 'guoyingc@cn.ibm.com',
     password    => $listpassword,
     description => 'List of the OpenStack Internationalization team.',
+    webserver   => $listdomain,
+    mailserver  => $listdomain,
+  }
+
+  maillist { 'openstack-i18n-de':
+    ensure      => present,
+    admin       => 'robert.simai@suse.com',
+    password    => $listpassword,
+    description => 'List of the German OpenStack Internationalization team.',
     webserver   => $listdomain,
     mailserver  => $listdomain,
   }
@@ -328,6 +346,15 @@ class openstack_project::lists(
     admin       => 'doc@aedo.net',
     password    => $listpassword,
     description => 'Coordinate admin details for OpenStack Community App Catalog.',
+    webserver   => $listdomain,
+    mailserver  => $listdomain,
+  }
+
+  maillist { 'openstack-i18n-fr':
+    ensure      => present,
+    admin       => 'jftalta@gmail.com',
+    password    => $listpassword,
+    description => 'List of the OpenStack Internationalization team, french local group.',
     webserver   => $listdomain,
     mailserver  => $listdomain,
   }

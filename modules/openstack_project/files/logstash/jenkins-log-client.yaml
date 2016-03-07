@@ -13,16 +13,16 @@ zmq-publishers:
 
 subunit-files:
   - name: logs/testrepository.subunit
-    retry-get: True
-    job-filter: '.*(tempest|grenade)-dsvm.*'
     build-queue-filter: 'gate'
   - name: logs/old/testrepository.subunit
     job-filter: '.*grenade-dsvm.*'
     build-queue-filter: 'gate'
-  - name: logs/testrepository.subunit
-    retry-get: True
+  - name: testrepository.subunit
+    build-queue-filter: 'gate'
+  - name: testrepository.subunit
     build-queue-filter: 'periodic'
-    job-filter: '.*(tempest|grenade)-dsvm.*'
+  - name: logs/testrepository.subunit
+    build-queue-filter: 'periodic'
 
 # List of files to source logs from.
 source-files:

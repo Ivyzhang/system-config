@@ -46,3 +46,20 @@ clouds:
       username: '<%= internap_username %>'
       password: '<%= internap_password %>'
       project_name: '<%= internap_project %>'
+  osic-cloud1:
+    region_name: RegionOne
+    auth:
+      auth_url: https://cloud1.osic.org:5000
+      username: <%= osic_username %>
+      password: <%= osic_password %>
+      project_name: <%= osic_project %>
+      project_domain_name: default
+      user_domain_name: default
+    identity_api_version: '3'
+  vexxhost:
+    region_name: ca-ymq-1
+    profile: vexxhost
+    auth:
+      username: '<%= vexxhost_username %>'
+      password: '<%= vexxhost_password %>'
+      project_name: '<%= vexxhost_project %>'

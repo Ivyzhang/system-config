@@ -14,14 +14,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+set -e
+
 echo "Obtaining bandersnatch tokens and running bandersnatch."
 k5start -t -f /etc/bandersnatch.keytab service/bandersnatch -- timeout -k 2m 30m run-bandersnatch
 
-RET=$?
-
-if [ $RET -eq 0 ]; then
-    echo "Bandersnatch completed successfully, running vos release."
-    k5start -t -f /etc/afsadmin.keytab service/afsadmin -- vos release mirror.pypi
-fi
+echo "Bandersnatch completed successfully, running vos release."
+k5start -t -f /etc/afsadmin.keytab service/afsadmin -- vos release -v mirror.pypi
 
 echo "Done."

@@ -10,7 +10,6 @@ class openstack_project::jenkins_params {
       $ant_package = 'ant'
       $awk_package = 'gawk'
       $asciidoc_package = 'asciidoc'
-      $curl_package = 'curl'
       $docbook_xml_package = 'docbook-style-xsl'
       $docbook5_xml_package = 'docbook5-schemas'
       $docbook5_xsl_package = 'docbook5-style-xsl'
@@ -45,7 +44,6 @@ class openstack_project::jenkins_params {
       $redis_package = 'redis'
       # For Ceilometer unit tests
       $mongodb_package = 'mongodb-server'
-      $pandoc_package = 'pandoc'
       $pkgconfig_package = 'pkgconfig'
       # FIXME: no PyPy headers on RHEL
       # FIXME: no PyPy on RHEL
@@ -86,13 +84,11 @@ class openstack_project::jenkins_params {
           Package['cgroups'],
           Package['cgroups-tools'],
         ]
-        $dvipng_package = 'texlive-dvipng'
       } else {
         $mysql_dev_package = 'mysql-devel'
         $cgroups_tools_package = ''
         $cgconfig_require = Package['cgroups']
         $cgred_require = Package['cgroups']
-        $dvipng_package = 'dvipng'
       }
 
       $uuid_dev = "libuuid-devel"
@@ -105,11 +101,9 @@ class openstack_project::jenkins_params {
       $ant_package = 'ant'
       $awk_package = 'gawk'
       $asciidoc_package = 'asciidoc'
-      $curl_package = 'curl'
       $docbook_xml_package = 'docbook-xml'
       $docbook5_xml_package = 'docbook5-xml'
       $docbook5_xsl_package = 'docbook-xsl'
-      $dvipng_package = 'dvipng'
       $firefox_package = 'firefox'
       $graphviz_package = 'graphviz'
       $libcurl_dev_package = 'libcurl4-gnutls-dev'
@@ -141,7 +135,6 @@ class openstack_project::jenkins_params {
       $redis_package = 'redis-server'
       # For Ceilometer unit tests
       $mongodb_package = 'mongodb'
-      $pandoc_package = 'pandoc'
       $pkgconfig_package = 'pkg-config'
       $pypy_dev_package = 'pypy-dev'
       $pypy_package = 'pypy'

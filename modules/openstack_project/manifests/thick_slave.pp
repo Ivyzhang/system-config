@@ -11,8 +11,6 @@ class openstack_project::thick_slave(
     $::openstack_project::jenkins_params::ant_package, # for building buck
     $::openstack_project::jenkins_params::awk_package, # for building extract_docs.awk to work correctly
     $::openstack_project::jenkins_params::asciidoc_package, # for building gerrit/building openstack docs
-    $::openstack_project::jenkins_params::curl_package,
-    $::openstack_project::jenkins_params::dvipng_package, # for generating image (ie: math) in docs
     $::openstack_project::jenkins_params::docbook_xml_package, # for building openstack docs
     $::openstack_project::jenkins_params::docbook5_xml_package, # for building openstack docs
     $::openstack_project::jenkins_params::docbook5_xsl_package, # for building openstack docs
@@ -39,7 +37,6 @@ class openstack_project::thick_slave(
     $::openstack_project::jenkins_params::libxml2_dev_package, # for xmllint, need for wadl
     $::openstack_project::jenkins_params::libxslt_dev_package,
     $::openstack_project::jenkins_params::libffi_dev_package, # xattr's cffi dependency
-    $::openstack_project::jenkins_params::pandoc_package, #for docs, markdown->docbook, bug 924507
     $::openstack_project::jenkins_params::pkgconfig_package, # for spidermonkey, used by ceilometer
     $::openstack_project::jenkins_params::python_libvirt_package,
     $::openstack_project::jenkins_params::python_lxml_package, # for validating openstack manuals

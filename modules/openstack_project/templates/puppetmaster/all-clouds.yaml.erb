@@ -20,15 +20,6 @@ clouds:
       password: <%= @puppetmaster_clouds['infra_files_rw_password'] %>
       project_name: <%= @puppetmaster_clouds['infra_files_rw_project_name'] %>
     region_name: DFW
-  openstackci2-hpcloud:
-    profile: hp
-    auth:
-      username: <%= @puppetmaster_clouds['openstackci2_hpcloud_username'] %>
-      password: <%= @puppetmaster_clouds['openstackci2_hpcloud_password'] %>
-      project_name: <%= @puppetmaster_clouds['openstackci2_hpcloud_project_name'] %>
-    regions:
-    - region-a.geo-1
-    - region-b.geo-1
   openstackci-bluebox:
     region_name: RegionOne
     auth:
@@ -121,3 +112,37 @@ clouds:
       username: <%= @puppetmaster_clouds['openstack_nodepool_tripleo_username'] %>
       password: <%= @puppetmaster_clouds['openstack_nodepool_tripleo_password'] %>
       project_name: <%= @puppetmaster_clouds['openstack_nodepool_tripleo_project_name'] %>
+  openstackjenkins-osic-cloud1:
+    region_name: RegionOne
+    auth:
+      auth_url: https://cloud1.osic.org:5000
+      username: <%= @puppetmaster_clouds['openstackjenkins_osic_username'] %>
+      password: <%= @puppetmaster_clouds['openstackjenkins_osic_password'] %>
+      project_name: <%= @puppetmaster_clouds['openstackjenkins_osic_project_name'] %>
+      project_domain_name: default
+      user_domain_name: default
+    identity_api_version: '3'
+  openstackci-osic-cloud1:
+    region_name: RegionOne
+    auth:
+      auth_url: https://cloud1.osic.org:5000
+      username: <%= @puppetmaster_clouds['openstackci_osic_username'] %>
+      password: <%= @puppetmaster_clouds['openstackci_osic_password'] %>
+      project_name: <%= @puppetmaster_clouds['openstackci_osic_project_name'] %>
+      project_domain_name: default
+      user_domain_name: default
+    identity_api_version: '3'
+  openstackjenkins-vexxhost:
+    region_name: ca-ymq-1
+    profile: vexxhost
+    auth:
+      username: '<%= @puppetmaster_clouds['openstackjenkins_vexxhost_username'] %>'
+      password: '<%= @puppetmaster_clouds['openstackjenkins_vexxhost_password'] %>'
+      project_name: '<%= @puppetmaster_clouds['openstackjenkins_vexxhost_project_name'] %>'
+  openstackci-vexxhost:
+    region_name: ca-ymq-1
+    profile: vexxhost
+    auth:
+      username: '<%= @puppetmaster_clouds['openstackci_vexxhost_username'] %>'
+      password: '<%= @puppetmaster_clouds['openstackci_vexxhost_password'] %>'
+      project_name: '<%= @puppetmaster_clouds['openstackci_vexxhost_project_name'] %>'
