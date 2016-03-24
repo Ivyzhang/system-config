@@ -1,4 +1,4 @@
-udpdate_cron: false
+update_cron: false
 
 cron_interval:
     min: "*/15"
