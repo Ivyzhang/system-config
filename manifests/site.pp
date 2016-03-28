@@ -66,6 +66,7 @@ node 'ci-jenkins-master.openstacklocal' {
 }
 
 node 'ci-nodepool.openstacklocal' {
+  $clouds_yaml = template("openstack_project/nodepool/clouds.yaml.erb") 
   class { 'openstack_project::server':
     sysadmins                 => hiera('sysadmins', []),
     iptables_public_tcp_ports => [80],
@@ -77,7 +78,7 @@ node 'ci-nodepool.openstacklocal' {
     mysql_password           => hiera('nodepool_mysql_password'),
     mysql_root_password      => hiera('nodepool_mysql_root_password'),
     nodepool_ssh_private_key => hiera('jenkins_ssh_private_key_contents'),
-    oscc_file_contents       => '',
+    oscc_file_contents       => $clouds_yaml,
     image_log_document_root  => '/var/log/nodepool/image',
     logging_conf_template    => 'openstack_project/nodepool/nodepool.logging.conf.erb',
     jenkins_masters          => [
