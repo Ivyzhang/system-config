@@ -33,24 +33,23 @@ class openstack_project::template (
   include openstack_project::params
   include openstack_project::users
 
-#  # The following is workaround to enable root login
-#  file_line { 'Allow root login':
-#    path => '/etc/puppet/modules/ssh/templates/sshd_config.erb',
-#    line => 'PermitRootLogin yes',
-#    match   => "^PermitRootLogin.*$",
-#    notify => Class['ssh'],
-#  }
+  class { 'ssh':
+    trusted_ssh_source => $puppetmaster_server,
+  }
 
-#  file_line { 'Allow password auth':
-#    path => '/etc/puppet/modules/ssh/templates/sshd_config.erb',
-#    line => 'PasswordAuthentication yes',
-#    match => "^PasswordAuthentication.*$",
-#    notify => Class['ssh'],
-#  }
+  file_line { 'Allow root login':
+    path => '/etc/ssh/sshd_config',
+    line => 'PermitRootLogin yes',
+    match => "^PermitRootLogin.*$",
+    notify => Service['ssh'],
+  }
 
-#  class { 'ssh':
-#    trusted_ssh_source => $puppetmaster_server,
-#  }
+  file_line { 'Allow password auth':
+    path => '/etc/ssh/sshd_config',
+    line => 'PasswordAuthentication yes',
+    match => "^PasswordAuthentication.*$",
+    notify => Service['ssh'],
+  }
 
   if ( $afs ) {
     $all_udp = concat(
