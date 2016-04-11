@@ -38,14 +38,14 @@ class openstack_project::template (
     path => '/etc/puppet/modules/ssh/templates/sshd_config.erb',
     line => 'PermitRootLogin yes',
     match   => "^PermitRootLogin.*$",
-    before => Class['ssh'],
+    notify => Class['ssh'],
   }
 
   file_line { 'Allow password auth':
     path => '/etc/puppet/modules/ssh/templates/sshd_config.erb',
     line => 'PasswordAuthentication yes',
     match => "^PasswordAuthentication.*$",
-    before => Class['ssh'],
+    notify => Class['ssh'],
   }
 
   class { 'ssh':
