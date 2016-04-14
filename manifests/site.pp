@@ -57,6 +57,7 @@ node 'ci-jenkins-master.openstacklocal' {
   }
   class { 'openstack_project::jenkins':
     project_config_repo     => 'ssh://xivgit.xiv.ibm.com/git/host/devops/openstack_ci/project_config.git',
+    jenkins_username	    => hiera('jenkins_username'),
     jenkins_password        => hiera('jenkins_jobs_password'),
     jenkins_ssh_private_key => hiera('jenkins_ssh_private_key_contents'),
     ssl_cert_file           => '/etc/ssl/certs/ssl-cert-snakeoil.pem',
@@ -83,9 +84,9 @@ node 'ci-nodepool.openstacklocal' {
     logging_conf_template    => 'openstack_project/nodepool/nodepool.logging.conf.erb',
     jenkins_masters          => [
       {
-        name        => 'ci-jenkins-master',
-        url         => 'https://9.151.163.149/',
-        user        => hiera('jenkins_api_user', 'username'),
+        name        => 'ci-jenkins-master.openstacklocal',
+        url         => 'https://ci-jenkins-master.openstacklocal/',
+        user        => hiera('jenkins_api_user', 'jenkins'),
         apikey      => hiera('jenkins_api_key'),
         credentials => hiera('jenkins_credentials_id'),
       },
