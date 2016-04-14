@@ -31,7 +31,7 @@ jenkins_ssh_private_key_contents: |-
     0g0N5gpzoUQw1wTYM7XoDaeqeD4HgWnmsU9mKSoR6hueYK6phF/1Mg==
     -----END RSA PRIVATE KEY-----
 
-jenkins_api_key: "123"
-jenkins_credentials_id: ""
+jenkins_api_key: "795c6b1bfd6610fed8d50a32c2eb8694"
+jenkins_credentials_id: "aa0368b3-6da2-429c-858c-c6c8c0ed7b42"
 
 
