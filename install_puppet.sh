@@ -42,6 +42,10 @@ function is_opensuse {
         cat /etc/os-release | grep -q -e "openSUSE"
 }
 
+function is_gentoo {
+    [ -f /usr/bin/emerge ]
+}
+
 # dnf is a drop-in replacement for yum on Fedora>=22
 YUM=yum
 if is_fedora && [[ $(lsb_release -rs) -ge 22 ]]; then
@@ -102,10 +106,26 @@ function setup_puppet_fedora {
     #   https://bugzilla.redhat.com/show_bug.cgi?id=1254616
     sudo sed -i.bak  '/^[^#].*/ s|\(^.*confine :exists => \"/run/systemd/system\".*$\)|#\ \1|' \
         /usr/share/ruby/vendor_ruby/puppet/provider/service/systemd.rb
+
+    # upstream "requests" pip package vendors urllib3 and chardet
+    # packages.  The fedora packages un-vendor this, and symlink those
+    # sub-packages back to packaged versions.  We get into a real mess
+    # of if some of the puppet ends up pulling in "requests" from pip,
+    # and then something like devstack does a "yum install
+    # python-requests" which does a very bad job at overwriting the
+    # pip-installed version (symlinks and existing directories don't
+    # mix).  A solution is to pre-install the python-requests
+    # package; clear it out and re-install from pip.  This way, the
+    # package is installed for dependencies, and we have a pip-managed
+    # requests with correctly vendored sub-packages.
+    sudo ${YUM} install -y python-requests
+    sudo rm -rf /usr/lib/python2.7/site-packages/requests/*
+    sudo rm -rf /usr/lib/python2.7/site-packages/requests-*.{egg,dist}-info
+    sudo pip install requests
 }
 
 function setup_puppet_rhel7 {
-    local puppet_pkg="https://yum.puppetlabs.com/el/7/products/x86_64/puppetlabs-release-7-10.noarch.rpm"
+    local puppet_pkg="https://yum.puppetlabs.com/puppetlabs-release-el-7.noarch.rpm"
 
     # install a bootstrap epel repo to install latest epel-release
     # package (which provides correct gpg keys, etc); then remove
@@ -171,10 +191,18 @@ Pin: version $FACTER_VERSION
 Pin-Priority: 501
 EOF
 
-    puppet_deb=puppetlabs-release-${lsbdistcodename}.deb
-    wget http://apt.puppetlabs.com/$puppet_deb -O $puppet_deb
-    dpkg -i $puppet_deb
-    rm $puppet_deb
+    # NOTE(pabelanger): Puppetlabs does not support ubuntu xenial. Instead use
+    # the version of puppet ship by xenial.
+    if [ $lsbdistcodename != 'xenial' ]; then
+        puppet_deb=puppetlabs-release-${lsbdistcodename}.deb
+        if type curl >/dev/null 2>&1; then
+            curl -O http://apt.puppetlabs.com/$puppet_deb
+        else
+            wget http://apt.puppetlabs.com/$puppet_deb -O $puppet_deb
+        fi
+        dpkg -i $puppet_deb
+        rm $puppet_deb
+    fi;
 
     apt-get update
     DEBIAN_FRONTEND=noninteractive apt-get --option 'Dpkg::Options::=--force-confold' \
@@ -192,6 +220,12 @@ function setup_puppet_opensuse {
     zypper --non-interactive in --force-resolution puppet
     # Wipe out templatedir so we don't get warnings about it
     sed -i '/templatedir/d' /etc/puppet/puppet.conf
+}
+
+function setup_puppet_gentoo {
+    emaint sync
+    emerge -q --jobs=4 puppet-agent
+    sed -i '/templatedir/d' /etc/puppetlabs/puppet/puppet.conf
 }
 
 #
@@ -222,7 +256,7 @@ function setup_pip {
         zypper --non-interactive in --force-resolution python python-xml
     fi
 
-    python get-pip.py -c <(echo 'pip<8')
+    python get-pip.py
     rm get-pip.py
 
     # we are about to overwrite setuptools, but some packages we
@@ -254,6 +288,8 @@ elif is_ubuntu; then
     setup_puppet_ubuntu
 elif is_opensuse; then
     setup_puppet_opensuse
+elif is_gentoo; then
+    setup_puppet_gentoo
 else
     echo "*** Can not setup puppet: distribution not recognized"
     exit 1

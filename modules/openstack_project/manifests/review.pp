@@ -92,6 +92,7 @@ class openstack_project::review (
   }
 
   class { 'openstack_project::gerrit':
+    git_http_url                        => 'https://git.openstack.org/',
     ssl_cert_file                       => $ssl_cert_file,
     ssl_key_file                        => $ssl_key_file,
     ssl_chain_file                      => $ssl_chain_file,
@@ -111,14 +112,13 @@ class openstack_project::review (
     email                               => 'review@openstack.org',
       # 1 + 100 + 9 + 2 + 2 + 25 => 139(rounded up)
     database_poollimit                  => '150',
-    container_heaplimit                 => '12g',
+    container_heaplimit                 => '30g',
     core_packedgitopenfiles             => '4096',
     core_packedgitlimit                 => '400m',
     core_packedgitwindowsize            => '16k',
     sshd_threads                        => '100',
     index_threads                       => 4,
     httpd_maxqueued                     => '200',
-    httpd_maxwait                       => '5000min',
     war                                 =>
       'http://tarballs.openstack.org/ci/gerrit/gerrit-v2.11.4.11.a14450f.war',
     contactstore                        => $contactstore,
@@ -140,6 +140,11 @@ class openstack_project::review (
     token_private_key                   => $token_private_key,
     swift_username                      => $swift_username,
     swift_password                      => $swift_password,
+    download                            => {
+        'command' => ['checkout', 'cherry_pick', 'pull', 'format_patch'],
+        'scheme'  => ['ssh', 'anon_http', 'anon_git'],
+        'archive' => ['tar', 'tbz2', 'tgz', 'txz'],
+    },
     replication_force_update            => true,
     replication                         => [
       {

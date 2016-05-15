@@ -71,6 +71,7 @@ node 'ci-nodepool.openstacklocal' {
   class { 'openstack_project::server':
     sysadmins                 => hiera('sysadmins', []),
     iptables_public_tcp_ports => [80],
+# Node-OS: centos7
   }
 
   class { '::openstackci::nodepool':

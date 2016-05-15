@@ -5,11 +5,20 @@ class openstack_project::mirror_update (
   $bandersnatch_keytab = '',
   $reprepro_keytab = '',
   $admin_keytab = '',
+  $npm_keytab = '',
+  $centos_keytab = '',
 ) {
 
   class { 'openstack_project::server':
     sysadmins => $sysadmins,
     afs       => true,
+  }
+
+  $data_directory = '/afs/.openstack.org/mirror/npm'
+  $uri_rewrite    = 'localhost'
+  class { 'openstack_project::npm_mirror':
+    data_directory => $data_directory,
+    uri_rewrite    => $uri_rewrite,
   }
 
   class { 'bandersnatch':
@@ -30,6 +39,13 @@ class openstack_project::mirror_update (
     content => $bandersnatch_keytab,
   }
 
+  file { '/etc/npm.keytab':
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0400',
+    content => $npm_keytab,
+  }
+
   file { '/etc/afsadmin.keytab':
     owner   => 'root',
     group   => 'root',
@@ -45,6 +61,14 @@ class openstack_project::mirror_update (
     source  => 'puppet:///modules/openstack_project/bandersnatch-mirror-update.sh',
   }
 
+  file { '/usr/local/bin/npm-mirror-update':
+    ensure   => present,
+    owner    => 'root',
+    group    => 'root',
+    mode     => '0755',
+    content  => template('openstack_project/npm-mirror-update.sh'),
+  }
+
   cron { 'bandersnatch':
     user        => $user,
     minute      => '*/5',
@@ -58,11 +82,35 @@ class openstack_project::mirror_update (
     ]
   }
 
-  class { '::openstack_project::reprepro':
-    confdir       => '/etc/reprepro/ubuntu',
-    basedir       => '/afs/.openstack.org/mirror/ubuntu',
-    distributions => 'openstack_project/reprepro/distributions.ubuntu.erb',
-    releases => ['trusty'],
+  cron { 'npm-mirror-update':
+    user        => $user,
+    minute      => '*/5',
+    command     => 'flock -n /var/run/npm-mirror-update/mirror.lock npm-mirror-update >>/var/log/npm-mirror-update/mirror.log 2>&1',
+    environment => 'PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',
+    require     => [
+      File['/usr/local/bin/npm-mirror-update'],
+      File['/etc/afsadmin.keytab'],
+      File['/etc/npm.keytab'],
+      Class['openstack_project::npm_mirror'],
+    ]
+  }
+
+  # TODO(clarkb) this setup needs to go in a class of its own. It is not
+  # in the define because it is common to all reprepro mirrors.
+  package { 'reprepro':
+    ensure => present,
+  }
+
+  file { '/var/log/reprepro':
+    ensure => directory,
+  }
+
+  file { '/var/run/reprepro':
+    ensure => directory,
+  }
+
+  file { '/etc/reprepro':
+    ensure => directory,
   }
 
   file { '/etc/reprepro.keytab':
@@ -84,16 +132,25 @@ class openstack_project::mirror_update (
     ensure => absent,
   }
 
+  ::openstack_project::reprepro { 'ubuntu-reprepro-mirror':
+    confdir       => '/etc/reprepro/ubuntu',
+    basedir       => '/afs/.openstack.org/mirror/ubuntu',
+    distributions => 'openstack_project/reprepro/distributions.ubuntu.erb',
+    updates_file  => 'puppet:///modules/openstack_project/reprepro/debuntu-updates',
+    releases      => ['trusty', 'xenial'],
+  }
+
   cron { 'reprepro ubuntu':
     user        => $user,
     hour        => '*/2',
-    command     => 'flock -n /var/run/reprepro/ubuntu.lock reprepro-mirror-update /etc/reprepro/ubuntu mirror.ubuntu >>/var/log/reprepro/mirror.log 2>&1',
+    minute      => '0',
+    command     => 'flock -n /var/run/reprepro/ubuntu.lock reprepro-mirror-update /etc/reprepro/ubuntu mirror.ubuntu >>/var/log/reprepro/ubuntu-mirror.log 2>&1',
     environment => 'PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',
     require     => [
        File['/usr/local/bin/reprepro-mirror-update'],
        File['/etc/afsadmin.keytab'],
        File['/etc/reprepro.keytab'],
-       Class['::openstack_project::reprepro'],
+       ::openstack_project::reprepro['ubuntu-reprepro-mirror'],
     ]
   }
 
@@ -105,5 +162,65 @@ class openstack_project::mirror_update (
     user       => 'root',
     key_server => 'hkp://keyserver.ubuntu.com',
     key_type   => 'public',
+  }
+
+  ::openstack_project::reprepro { 'debian-ceph-hammer-reprepro-mirror':
+    confdir       => '/etc/reprepro/debian-ceph-hammer',
+    basedir       => '/afs/.openstack.org/mirror/ceph-deb-hammer',
+    distributions => 'openstack_project/reprepro/distributions.debian-ceph-hammer.erb',
+    updates_file  => 'puppet:///modules/openstack_project/reprepro/debian-ceph-hammer-updates',
+    releases      => ['trusty', 'xenial'],
+  }
+
+  cron { 'reprepro debian ceph hammer':
+    user        => $user,
+    hour        => '*/2',
+    minute      => '0',
+    command     => 'flock -n /var/run/reprepro/debian-ceph-hammer.lock reprepro-mirror-update /etc/reprepro/debian-ceph-hammer mirror.deb-hammer >>/var/log/reprepro/debian-ceph-hammer-mirror.log 2>&1',
+    environment => 'PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',
+    require     => [
+       File['/usr/local/bin/reprepro-mirror-update'],
+       File['/etc/afsadmin.keytab'],
+       File['/etc/reprepro.keytab'],
+       ::openstack_project::reprepro['debian-ceph-hammer-reprepro-mirror'],
+    ]
+  }
+
+  gnupg_key { 'Ceph Archive':
+    ensure     => present,
+    # 08B7 3419 AC32 B4E9 66C1  A330 E84A C2C0 460F 3994
+    key_id     => 'E84AC2C0460F3994',
+    user       => 'root',
+    key_type   => 'public',
+    key_source => 'puppet:///modules/openstack_project/reprepro/ceph-mirror-gpg-key.asc',
+  }
+
+  ### CentOS mirror ###
+  file { '/etc/centos.keytab':
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0400',
+    content => $centos_keytab,
+  }
+
+  file { '/usr/local/bin/centos-mirror-update':
+    ensure  => present,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0755',
+    source  => 'puppet:///modules/openstack_project/mirror/centos-mirror-update.sh',
+  }
+
+  cron { 'centos mirror':
+    user        => $user,
+    minute      => '0',
+    hour        => '*/2',
+    command     => 'flock -n /var/run/centos-mirror.lock centos-mirror-update mirror.centos >>/var/log/centos-mirror.log 2>&1',
+    environment => 'PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',
+    require     => [
+       File['/usr/local/bin/centos-mirror-update'],
+       File['/etc/afsadmin.keytab'],
+       File['/etc/centos.keytab'],
+    ]
   }
 }

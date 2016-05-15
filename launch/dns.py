@@ -18,78 +18,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import argparse
-import utils
 
 
-def get_client():
-    #TODO use shade
-    NOVA_USERNAME = os.environ['OS_USERNAME']
-    NOVA_PASSWORD = os.environ['OS_PASSWORD']
-    NOVA_URL = os.environ['OS_AUTH_URL']
-    NOVA_PROJECT_ID = os.environ['OS_TENANT_NAME']
-    NOVA_REGION_NAME = os.environ['OS_REGION_NAME']
-
-    args = [NOVA_USERNAME, NOVA_PASSWORD, NOVA_PROJECT_ID, NOVA_URL]
-    kwargs = {}
-    kwargs['region_name'] = NOVA_REGION_NAME
-    kwargs['service_type'] = 'compute'
-    from novaclient.v1_1.client import Client
-    client = Client(*args, **kwargs)
-    return client
+def get_href(server):
+    if not hasattr(server, 'links'):
+        return None
+    for link in server.links:
+        if link['rel'] == 'self':
+            return link['href']
 
 
-def print_dns(client, name):
-    for server in client.servers.list():
-        if server.name != name:
-            continue
-        ip4 = utils.get_public_ip(server)
-        ip6 = utils.get_public_ip(server, 6)
-        href = utils.get_href(server)
-
-        print
-        print "Run the following commands to set up DNS:"
-        print
-        print ". ~root/rackdns-venv/bin/activate"
-        print
-        print (
-            "rackdns rdns-create --name %s \\\n"
-            "    --data %s \\\n"
-            "    --server-href %s \\\n"
-            "    --ttl 3600" % (
-                server.name, ip6, href))
-        print
-        print (
-            "rackdns rdns-create --name %s \\\n"
-            "    --data %s \\\n"
-            "    --server-href %s \\\n"
-            "    --ttl 3600" % (
-                server.name, ip4, href))
-        print
-        print ". ~root/ci-launch/openstack-rs-nova.sh"
-        print
-        print (
-            "rackdns record-create --name %s \\\n"
-            "    --type AAAA --data %s \\\n"
-            "    --ttl 3600 openstack.org" % (
-                server.name, ip6))
-        print
-        print (
-            "rackdns record-create --name %s \\\n"
-            "    --type A --data %s \\\n"
-            "    --ttl 3600 openstack.org" % (
-                server.name, ip4))
-
-
-def shade_print_dns(server):
+def print_dns(cloud, server):
     ip4 = server.public_v4
     ip6 = server.public_v6
-    href = utils.get_href(server)
+
+    for raw_server in cloud.nova_client.servers.list():
+        if raw_server.id == server.id:
+            href = get_href(raw_server)
 
     print
     print "Run the following commands to set up DNS:"
     print
+    print ". ~root/ci-launch/openstackci-rs-nova.sh"
     print ". ~root/rackdns-venv/bin/activate"
     print
     print (
@@ -126,8 +77,10 @@ def main():
     parser.add_argument("name", help="server name")
     options = parser.parse_args()
 
-    client = get_client()
-    print_dns(client, options.name)
+    import shade
+    cloud = shade.openstack_cloud()
+    server = cloud.get_server(options.name)
+    print_dns(cloud, server)
 
 if __name__ == '__main__':
     main()

@@ -29,16 +29,16 @@ set +e
 
 if [ "$1" != "dry_run" ]; then
     # First, sync the puppet repos with all the machines
-    ansible-playbook -f 20 ${ANSIBLE_PLAYBOOKS}/update_puppet.yaml
+    timeout -k 2m 120m ansible-playbook -f 10 ${ANSIBLE_PLAYBOOKS}/update_puppet.yaml
 else
-    ansible-playbook -f 20 ${ANSIBLE_PLAYBOOKS}/update_puppet.yaml --extra-vars "dry_run=y"
+    timeout -k 2m 120m ansible-playbook -f 20 ${ANSIBLE_PLAYBOOKS}/update_puppet.yaml --extra-vars "dry_run=y"
 fi
 
 # Run the git/gerrit sequence, since it's important that they all work together
-ansible-playbook -f 10 ${ANSIBLE_PLAYBOOKS}/remote_puppet_git.yaml
+timeout -k 2m 120m ansible-playbook -f 10 ${ANSIBLE_PLAYBOOKS}/remote_puppet_git.yaml
 # Run AFS changes separately so we can make sure to only do one at a time
 # (turns out quorum is nice to have)
-ansible-playbook -f 1 ${ANSIBLE_PLAYBOOKS}/remote_puppet_afs.yaml
-ansible-playbook -f 10 ${ANSIBLE_PLAYBOOKS}/remote_puppet_infracloud.yaml
+timeout -k 2m 120m ansible-playbook -f 1 ${ANSIBLE_PLAYBOOKS}/remote_puppet_afs.yaml
+timeout -k 2m 120m ansible-playbook -f 10 ${ANSIBLE_PLAYBOOKS}/remote_puppet_infracloud.yaml
 # Run everything else. We do not care if the other things worked
-ansible-playbook -f 20 ${ANSIBLE_PLAYBOOKS}/remote_puppet_else.yaml
+timeout -k 2m 120m ansible-playbook -f 10 ${ANSIBLE_PLAYBOOKS}/remote_puppet_else.yaml

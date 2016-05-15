@@ -27,6 +27,8 @@ Components: main universe
 UDebComponents: main
 Contents: .gz
 Update: ubuntu
+NotAutomatic: yes
+ButAutomaticUpgrades: yes
 Log: <%= @logdir %>/ubuntu-<%= release %>-backports.log
 
 Origin: Ubuntu
@@ -38,4 +40,5 @@ UDebComponents: main
 Contents: .gz
 Update: ubuntu-security
 Log: <%= @logdir %>/ubuntu-<%= release %>-security.log
+
 <% end -%>

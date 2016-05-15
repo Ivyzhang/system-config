@@ -25,11 +25,32 @@ class openstack_project::logstash_worker (
     source => 'puppet:///modules/openstack_project/logstash/logstash-indexer.default',
   }
 
-  class { 'logstash::indexer':
-    conf_template => 'openstack_project/logstash/indexer.conf.erb',
+  vcsrepo { '/opt/logstash-filters':
+    ensure   => latest,
+    provider => git,
+    revision => 'master',
+    source   => 'https://git.openstack.org/openstack-infra/logstash-filters',
   }
 
-  include log_processor
+  include ::logstash
+
+  logstash::filter { 'openstack-logstash-filters':
+    level   => '50',
+    target  => '/opt/logstash-filters/filters/openstack-filters.conf',
+    require => [
+      Class['::logstash'],
+      Vcsrepo['/opt/logstash-filters'],
+    ],
+    notify  => Service['logstash'],
+  }
+
+  class { '::logstash::indexer':
+    input_template  => 'openstack_project/logstash/input.conf.erb',
+    output_template => 'openstack_project/logstash/output.conf.erb',
+    require         => Logstash::Filter['openstack-logstash-filters'],
+  }
+
+  include ::log_processor
   log_processor::worker { 'A':
     config_file => 'puppet:///modules/openstack_project/logstash/jenkins-log-worker.yaml',
   }
@@ -41,20 +62,5 @@ class openstack_project::logstash_worker (
   }
   log_processor::worker { 'D':
     config_file => 'puppet:///modules/openstack_project/logstash/jenkins-log-worker.yaml',
-  }
-
-  class { '::elasticsearch':
-    es_template_config => {
-      'gateway.recover_after_nodes'          => '5',
-      'gateway.recover_after_time'           => '5m',
-      'gateway.expected_nodes'               => '6',
-      'discovery.zen.minimum_master_nodes'   => '5',
-      'discovery.zen.ping.multicast.enabled' => false,
-      'discovery.zen.ping.unicast.hosts'     => $elasticsearch_nodes,
-      'node.master'                          => false,
-      'node.data'                            => false,
-    },
-    heap_size          => '1g',
-    version            => '1.7.3',
   }
 }

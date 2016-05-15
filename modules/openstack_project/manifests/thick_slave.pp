@@ -24,13 +24,11 @@ class openstack_project::thick_slave(
     $::openstack_project::jenkins_params::libpcap_dev_package, # for pypcap egg
     $::openstack_project::jenkins_params::ldap_dev_package,
     $::openstack_project::jenkins_params::librrd_dev_package, # for python-rrdtool, used by kwapi
-    $::openstack_project::jenkins_params::libtidy_package, # for python-tidy, used by sphinxcontrib-docbookrestapi
     $::openstack_project::jenkins_params::libsasl_dev, # for keystone ldap auth integration
     $::openstack_project::jenkins_params::memcached_package, # for tooz unit tests
     $::openstack_project::jenkins_params::redis_package, # for tooz unit tests (and others that use redis)
     $::openstack_project::jenkins_params::mongodb_package, # for ceilometer unit tests
     $::openstack_project::jenkins_params::mysql_dev_package,
-    $::openstack_project::jenkins_params::nspr_dev_package, # for spidermonkey, used by ceilometer
     $::openstack_project::jenkins_params::sqlite_dev_package,
     $::openstack_project::jenkins_params::libvirt_dev_package,
     $::openstack_project::jenkins_params::libxml2_package,
@@ -42,7 +40,6 @@ class openstack_project::thick_slave(
     $::openstack_project::jenkins_params::python_lxml_package, # for validating openstack manuals
     $::openstack_project::jenkins_params::python_zmq_package, # zeromq unittests (not pip installable)
     $::openstack_project::jenkins_params::rubygems_package,
-    $::openstack_project::jenkins_params::sbcl_package, # cl-openstack-client testing
     $::openstack_project::jenkins_params::sqlite_package,
     $::openstack_project::jenkins_params::unzip_package,
     $::openstack_project::jenkins_params::zip_package,

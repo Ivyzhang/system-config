@@ -8,6 +8,7 @@ class openstack_project::gerrit (
   $mysql_password,
   $vhost_name = $::fqdn,
   $canonicalweburl = "https://${::fqdn}/",
+  $git_http_url = '',
   $serveradmin = 'webmaster@openstack.org',
   $ssh_host_key = '/home/gerrit2/review_site/etc/ssh_host_rsa_key',
   $ssh_project_key = '/home/gerrit2/review_site/etc/ssh_project_rsa_key',
@@ -75,6 +76,7 @@ class openstack_project::gerrit (
   $report_bug_text = 'Get Help',
   $report_bug_url = 'http://docs.openstack.org/infra/system-config/project.html#contributing',
   $index_threads = 1,
+  $download = {},
 ) {
 
   class { 'jeepyb::openstackwatch':
@@ -104,6 +106,7 @@ class openstack_project::gerrit (
   class { '::gerrit':
     vhost_name                          => $vhost_name,
     canonicalweburl                     => $canonicalweburl,
+    git_http_url                        => $git_http_url,
     # opinions
     allow_drafts                        => false,
     enable_melody                       => true,
@@ -211,6 +214,7 @@ class openstack_project::gerrit (
     report_bug_text                     => $report_bug_text,
     report_bug_url                      => $report_bug_url,
     index_threads                       => $index_threads,
+    download                            => $download,
   }
 
   mysql_backup::backup_remote { 'gerrit':

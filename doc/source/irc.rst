@@ -42,8 +42,9 @@ but there are many reasons why a team would like to have their own channel.
 Access
 ------
 
-Register the channel with ChanServ and give the infrastructure team account
-founder access to the channel with::
+`Register the channel with ChanServ
+<https://freenode.net/news/registering-a-channel-on-freenode>`_ and give the
+infrastructure team account founder access to the channel with::
 
   /msg chanserv register #channel
   /msg chanserv set #channel guard on
@@ -283,9 +284,9 @@ command:
 
   /msg chanserv access #channel list
 
-Visit the `Freenode Channel Guidelines
-<http://freenode.net/channel_guidelines.shtml>`_ for more information about
-recommended strategies for running channels on Freenode.
+Visit the `Freenode Channel Guidelines <https://freenode.net/changuide>`_
+for more information about recommended strategies for running channels on
+Freenode.
 
 Renaming an IRC Channel
 =======================

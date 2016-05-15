@@ -204,7 +204,8 @@ class openstack_project::template (
 
   case $::osfamily {
     'Debian': {
-      # Purge and augment existing /etc/apt/sources.list if requested
+      # Purge and augment existing /etc/apt/sources.list if requested, and make
+      # sure apt-get update is run before any packages are installed
       class { '::apt':
         purge => { 'sources.list' => $purge_apt_sources }
       }
@@ -216,6 +217,13 @@ class openstack_project::template (
           owner  => 'root',
           source => "puppet:///modules/openstack_project/sources.list.${::lsbdistcodename}",
         }
+        exec { 'update-apt':
+            command     => 'apt-get update',
+            refreshonly => true,
+            path        => '/bin:/usr/bin',
+            subscribe   => File['/etc/apt/sources.list.d/openstack-infra.list'],
+        }
+        Exec['update-apt'] -> Package <| |>
       }
 
       # Make sure dig is installed
@@ -283,7 +291,7 @@ class openstack_project::template (
     type    => 'ssh-rsa',
     key     => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQDSLlN41ftgxkNeUi/kATYPwMPjJdMaSbgokSb9PSkRPZE7GeNai60BCfhu+ky8h5eMe70Bpwb7mQ7GAtHGXPNU1SRBPhMuVN9EYrQbt5KSiwuiTXtQHsWyYrSKtB+XGbl2PhpMQ/TPVtFoL5usxu/MYaakVkCEbt5IbPYNg88/NKPixicJuhi0qsd+l1X1zoc1+Fn87PlwMoIgfLIktwaL8hw9mzqr+pPcDIjCFQQWnjqJVEObOcMstBT20XwKj/ymiH+6p123nnlIHilACJzXhmIZIZO+EGkNF7KyXpcBSfv9efPI+VCE2TOv/scJFdEHtDFkl2kdUBYPC0wQ92rp',
     options => [
-      'from="ci-puppet-master.openstacklocal"',
+      'from="ci-puppet-master.openstacklocal,localhost"',
     ],
     require => File['/root/.ssh'],
   }
@@ -335,9 +343,9 @@ class openstack_project::template (
   # Which Puppet do I take?
   # Take $puppet_version and pin to that version
   if ($::osfamily == 'Debian') {
-    # Note(JR): Puppetlabs does not support Ubuntu Vivid currently, but it
-    # also seems that distro packages are recent enough
-    if ($::operatingsystemrelease != '15.04') {
+    # NOTE(pabelanger): Puppetlabs only support Ubuntu Trusty and below,
+    # anything greater will use the OS version of puppet.
+    if ($::operatingsystemrelease < '15.04') {
       apt::source { 'puppetlabs':
         location => 'http://apt.puppetlabs.com',
         repos    => 'main',

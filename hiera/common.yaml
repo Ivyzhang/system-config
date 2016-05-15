@@ -35,7 +35,6 @@ statusbot_channels:
 - edeploy
 - fuel-dev
 - heat
-- kolla
 - midonet
 - murano
 - openstack
@@ -69,12 +68,8 @@ statusbot_channels:
 - openstack-infra-incident
 - openstack-ironic
 - openstack-keystone
+- openstack-kolla
 - openstack-manila
-- openstack-meeting
-- openstack-meeting-3
-- openstack-meeting-4
-- openstack-meeting-alt
-- openstack-meeting-cp
 - openstack-meniscus
 - openstack-merges
 - openstack-metering
@@ -84,11 +79,13 @@ statusbot_channels:
 - openstack-nova
 - openstack-opw
 - openstack-oslo
+- openstack-product
 - openstack-qa
 - openstack-raksha
 - openstack-rally
 - openstack-rating
 - openstack-release
+- openstack-requirements
 - openstack-sahara
 - openstack-sdks
 - openstack-searchlight
@@ -100,10 +97,11 @@ statusbot_channels:
 - openstack-swift
 - openstack-telemetry
 - openstack-trove
+- openstack-vitrage
 - openstack-zaqar
 - openstack-zephyr
-- packstack-dev
 - puppet-openstack
+- rdo
 - refstack
 - senlin
 - storyboard
@@ -114,7 +112,6 @@ meetbot_channels:
 - '#congress'
 - '#dox'
 - '#heat'
-- '#kolla'
 - '#midonet'
 - '#murano'
 - '#openstack'
@@ -150,6 +147,7 @@ meetbot_channels:
 - '#openstack-ironic'
 - '#openstack-keystone'
 - '#openstack-ko'
+- '#openstack-kolla'
 - '#openstack-kuryr'
 - '#openstack-lbaas'
 - '#openstack-manila'
@@ -169,10 +167,12 @@ meetbot_channels:
 - '#openstack-performance'
 - '#openstack-opw'
 - '#openstack-oslo'
+- '#openstack-product'
 - '#openstack-qa'
 - '#openstack-rally'
 - '#openstack-rating'
 - '#openstack-release'
+- '#openstack-requirements'
 - '#openstack-rpm-packaging'
 - '#openstack-sahara'
 - '#openstack-sdks'
@@ -190,11 +190,14 @@ meetbot_channels:
 - '#openstack-third-party-ci'
 - '#openstack-trove'
 - '#openstack-ux'
+- '#openstack-vitrage'
 - '#openstack-vmware-nsx'
 - '#openstack-watcher'
 - '#openstack-zaqar'
 - '#openstack-zephyr'
+- '#osic'
 - '#puppet-openstack'
+- '#rdo'
 - '#refstack'
 - '#senlin'
 - '#storyboard'
@@ -322,21 +325,13 @@ cacti_hosts:
 - proposal.slave.openstack.org
 - puppetdb.openstack.org
 - puppetmaster.openstack.org
-- pypi.bhs1.openstack.org
-- pypi.dfw.openstack.org
-- pypi.gra1.openstack.org
-- pypi.iad.openstack.org
-- pypi.nyj01.openstack.org
-- pypi.ord.openstack.org
-- pypi.region-b.geo-1.openstack.org
-- pypi.regionone.openstack.org
 - mirror.bhs1.ovh.openstack.org
+- mirror.ca-ymq-1.vexxhost.openstack.org
 - mirror.dfw.rax.openstack.org
 - mirror.gra1.ovh.openstack.org
 - mirror.iad.rax.openstack.org
 - mirror.nyj01.internap.openstack.org
 - mirror.ord.rax.openstack.org
-- mirror.region-b.geo-1.hpcloud.openstack.org
 - mirror.regionone.bluebox-sjc1.openstack.org
 - mirror-update.openstack.org
 - release.slave.openstack.org
@@ -423,3 +418,17 @@ infracloud_hpuswest_ssl_cert_file_contents: |
   owvCaOxApNWme7u9u8YoxwjnqUg/z/+JnoK1BxK3egry7eqEfM53rhupELMAJbtP
   WLk7r3L67Gsoy4WmFjQ=
   -----END CERTIFICATE-----
+statusbot_auth_nicks:
+- jeblair
+- ttx
+- fungi
+- mordred
+- clarkb
+- sdague
+- SergeyLukjanov
+- jhesketh
+- lifeless
+- pabelanger
+- pleia2
+- yolanda
+- nibalizer

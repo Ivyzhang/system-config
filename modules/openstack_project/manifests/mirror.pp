@@ -7,6 +7,8 @@ class openstack_project::mirror (
   $mirror_root = '/afs/openstack.org/mirror'
   $pypi_root = "${mirror_root}/pypi"
   $wheel_root = "${mirror_root}/wheel"
+  $npm_root = "${mirror_root}/npm"
+  $ceph_deb_hammer_root = "${mirror_root}/ceph-deb-hammer"
 
   $www_base = '/var/www'
   $www_root = "${www_base}/mirror"
@@ -50,10 +52,42 @@ class openstack_project::mirror (
     ]
   }
 
+  # Create the symlink to centos
+  file { "${www_root}/centos":
+    ensure  => link,
+    target  => "${mirror_root}/centos",
+    owner   => root,
+    group   => root,
+    require => [
+      File["${www_root}"],
+    ]
+  }
+
   # Create the symlink to apt.
   file { "${www_root}/ubuntu":
     ensure  => link,
     target  => "${mirror_root}/ubuntu",
+    owner   => root,
+    group   => root,
+    require => [
+      File["${www_root}"],
+    ]
+  }
+
+  file { "${www_root}/npm":
+    ensure  => link,
+    target  => "${npm_root}",
+    owner   => root,
+    group   => root,
+    require => [
+      File["${www_root}"],
+    ]
+  }
+
+  # Create the symlink to ceph-deb-hammer.
+  file { "${www_root}/ceph-deb-hammer":
+    ensure  => link,
+    target  => "${ceph_deb_hammer_root}",
     owner   => root,
     group   => root,
     require => [
@@ -76,6 +110,12 @@ class openstack_project::mirror (
 
   if ! defined(Httpd::Mod['rewrite']) {
     httpd::mod { 'rewrite':
+      ensure => present,
+    }
+  }
+
+  if ! defined(Httpd::Mod['substitute']) {
+    httpd::mod { 'substitute':
       ensure => present,
     }
   }

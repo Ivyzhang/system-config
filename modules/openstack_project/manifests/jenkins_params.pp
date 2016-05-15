@@ -21,12 +21,10 @@ class openstack_project::jenkins_params {
       $librrd_dev_package = 'rrdtool-devel'
       # packages needed by document translation
       $gnome_doc_package = 'gnome-doc-utils'
-      $libtidy_package = 'libtidy'
       $gettext_package = 'gettext'
       $language_fonts_packages = []
       # for keystone ldap auth integration
       $libsasl_dev = 'cyrus-sasl-devel'
-      $nspr_dev_package = 'nspr-devel'
       $sqlite_dev_package = 'sqlite-devel'
       $liberasurecode_dev_package = 'liberasurecode-devel'
       $libevent_dev_package = 'libevent-devel'
@@ -54,8 +52,6 @@ class openstack_project::jenkins_params {
       $python_requests_package = 'python-requests'
       $python_zmq_package = 'python-zmq'
       $rubygems_package = 'rubygems'
-      # Common Lisp interpreter, used for cl-openstack-client
-      $sbcl_package = 'sbcl'
       $sqlite_package = 'sqlite'
       $unzip_package = 'unzip'
       $zip_package = 'zip'
@@ -85,7 +81,7 @@ class openstack_project::jenkins_params {
           Package['cgroups-tools'],
         ]
       } else {
-        $mysql_dev_package = 'mysql-devel'
+        $mysql_dev_package = 'mariadb-devel'
         $cgroups_tools_package = ''
         $cgconfig_require = Package['cgroups']
         $cgred_require = Package['cgroups']
@@ -115,20 +111,22 @@ class openstack_project::jenkins_params {
       $librrd_dev_package = 'librrd-dev'
       # packages needed by document translation
       $gnome_doc_package = 'gnome-doc-utils'
-      $libtidy_package = 'libtidy-0.99-0'
       $gettext_package = 'gettext'
       $language_fonts_packages = ['fonts-takao', 'fonts-nanum']
       # for keystone ldap auth integration
       $libsasl_dev = 'libsasl2-dev'
       $mysql_dev_package = 'libmysqlclient-dev'
-      $nspr_dev_package = 'libnspr4-dev'
       $sqlite_dev_package = 'libsqlite3-dev'
       $libvirt_dev_package = 'libvirt-dev'
       $libxml2_package = 'libxml2-utils'
       $libxml2_dev_package = 'libxml2-dev'
       $libxslt_dev_package = 'libxslt1-dev'
       $libffi_dev_package = 'libffi-dev'
-      $maven_package = 'maven2'
+      if ($::operatingsystem == 'Ubuntu') and ($::operatingsystemrelease >= '16.04') {
+        $maven_package = 'maven'
+      } else {
+        $maven_package = 'maven2'
+      }
       # For tooz unit tests
       $memcached_package = 'memcached'
       # For tooz unit tests (and others that use redis)
@@ -150,8 +148,6 @@ class openstack_project::jenkins_params {
         $rubygems_package = 'ruby'
       }
 
-      # Common Lisp interpreter, used for cl-openstack-client
-      $sbcl_package = 'sbcl'
       $sqlite_package = 'sqlite3'
       $unzip_package = 'unzip'
       $zip_package = 'zip'

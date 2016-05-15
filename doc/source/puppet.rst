@@ -39,7 +39,7 @@ The cron jobs, current configuration files and more can be done with ``puppet
 apply`` but first some bootstrapping needs to be done.
 
 You want to install these from puppetlabs' apt repo. There is a script,
-`:file:`install_puppet.sh` in the root of the system-config repository that
+:file:`install_puppet.sh` in the root of the system-config repository that
 will setup and install the puppet client. After that you must install the
 ansible playbooks and hiera config (used to maintain secrets).
 
@@ -113,14 +113,18 @@ creation of the master repos on the gerrit server.
 If an admin needs to run puppet by hand, it's a simple matter of either
 logging in to the server in question and running
 `puppet apply /opt/system-config/production/manifests/site.pp` or, on the
-puppetmaster, running
-`ansible-playbook --limit='$HOST;localhost' /opt/system-config/production/playbooks/remote_puppet_all.yaml`
-as root, where `$HOST` is the host you want to run puppet on. If you are
-working with git, gerrit or afs servers, you'll want to replace
-`remote_puppet_all.yaml` with the appropriate specific playbook.
-The `;localhost` is important as some of the plays depend on performing a task
+puppetmaster, running:
+
+.. code-block:: bash
+
+  ansible-playbook --limit="$HOST:localhost" /opt/system-config/production/playbooks/remote_puppet_adhoc.yaml
+
+as root, where `$HOST` is the host you want to run puppet on.
+The `:localhost` is important as some of the plays depend on performing a task
 on the localhost before continuing to the host in question, and without it in
 the limit section, the tasks for the host will have undefined values.
+There is also a script, `tools/kick.sh` that takes the host as an argument
+and runs the above command.
 
 Testing new puppet code can be done via `puppet apply --noop` or by
 constructing a VM with a puppet install in it and just running `puppet apply`
