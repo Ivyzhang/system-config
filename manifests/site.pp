@@ -41,14 +41,17 @@ node 'ci-zuul.openstacklocal' {
       'ci-nodepool.openstacklocal',
     ],
   }
-  $group = "zuul-merger"
-  class { 'openstack_project::zuul_merger':
-    gearman_server       => 'ci-zuul.openstacklocal',
-    gerrit_server        => 'review.openstack.org',
-    gerrit_user          => 'ibm_storage_ci',
-    gerrit_ssh_host_key  => hiera('gerrit_ssh_rsa_pubkey_contents'),
-    zuul_ssh_private_key => hiera('zuul_ssh_private_key_contents'),
-    sysadmins            => hiera('sysadmins', []),
+
+  class { 'openstackci::zuul_merger':
+    vhost_name               => $::fqdn,
+    gearman_server           => 'ci-zuul.openstacklocal',
+    gerrit_server            => 'review.openstack.org',
+    gerrit_user              => 'ibm_storage_ci',
+    zuul_ssh_private_key     => hiera('zuul_ssh_private_key_contents'),
+    zuul_url                 => "http://${::fqdn}/p",
+    git_email                => 'jenkins@openstack.org',
+    git_name                 => 'OpenStack Jenkins',
+    manage_common_zuul       => false,
   }
 }
 
