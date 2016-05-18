@@ -39,6 +39,8 @@ node 'ci-zuul.openstacklocal' {
     statsd_host                    => 'graphite.openstack.org',
     gearman_workers                => [
       'ci-nodepool.openstacklocal',
+      'ci-jenkins-master.openstacklocal',
+      'ci-zuul.openstacklocal',
     ],
   }
 
