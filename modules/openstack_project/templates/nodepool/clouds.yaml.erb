@@ -7,10 +7,8 @@ clouds:
     region_name: 'RegionOne'
     floating_ip_source: nova
     networks:
-      - name: inap-17304-WAN2342
+      - name: public
         routes_externally: True
-      - name: inap-17304-LAN3326
-        routes_externally: False
     auth:
       auth_url: 'http://9.11.122.20:5000/v3'
       username: 'admin'
