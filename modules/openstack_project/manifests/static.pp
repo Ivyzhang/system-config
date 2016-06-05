@@ -10,7 +10,7 @@ class openstack_project::static (
   $project_config_repo = '',
   $ssl_cert_file = '/var/lib/puppet/ssl/certs/${vhost_name}.pem',
   $ssl_cert_file_contents = '',
-  $ssl_key_file = '/var/lib/puppet/ssl/private_keys/${vhost_name}.pem',,
+  $ssl_key_file = '/var/lib/puppet/ssl/private_keys/${vhost_name}.pem',
   $ssl_key_file_contents = '',
   $ssl_chain_file = '',
   $ssl_chain_file_contents = '',
