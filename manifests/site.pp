@@ -17,7 +17,7 @@ node 'ci-puppet-master.openstacklocal' {
 
 node 'ci-zuul.openstacklocal' {
   class { 'openstack_project::zuul_prod':
-    project_config_repo            => 'ssh://xivgit.xiv.ibm.com/git/host/devops/openstack_ci/project_config.git',
+    project_config_repo            => 'https://gitlabhost.rtp.raleigh.ibm.com/Y9CM3C756/project-config.git',
     gerrit_server                  => 'review.openstack.org',
     gerrit_user                    => 'ibm_storage_ci',
     gerrit_ssh_host_key            => hiera('gerrit_ssh_rsa_pubkey_contents'),
@@ -70,7 +70,7 @@ node 'ci-jenkins-master.openstacklocal' {
     puppetmaster_server       => 'ci-puppet-master.openstacklocal',
   }
   class { 'openstack_project::jenkins':
-    project_config_repo     => 'ssh://xivgit.xiv.ibm.com/git/host/devops/openstack_ci/project_config.git',
+    project_config_repo     => 'https://gitlabhost.rtp.raleigh.ibm.com/Y9CM3C756/project-config.git',
     jenkins_username	    => hiera('jenkins_username'),
     jenkins_password        => hiera('jenkins_jobs_password'),
     jenkins_ssh_private_key => hiera('jenkins_ssh_private_key_contents'),
@@ -90,7 +90,7 @@ node 'ci-nodepool.openstacklocal' {
 
   class { '::openstackci::nodepool':
     vhost_name               => 'ci-nodepool.openstacklocal',
-    project_config_repo      => 'ssh://xivgit.xiv.ibm.com/git/host/devops/openstack_ci/project_config.git',
+    project_config_repo      => 'https://gitlabhost.rtp.raleigh.ibm.com/Y9CM3C756/project-config.git',
     mysql_password           => hiera('nodepool_mysql_password'),
     mysql_root_password      => hiera('nodepool_mysql_root_password'),
     nodepool_ssh_private_key => hiera('jenkins_ssh_private_key_contents'),

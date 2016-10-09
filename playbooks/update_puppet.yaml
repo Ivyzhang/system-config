@@ -4,7 +4,7 @@
   gather_facts: false
   tasks:
   - git:
-      repo: ssh://xivgit.xiv.ibm.com/git/host/devops/openstack_ci/system_config.git
+      repo: https://gitlabhost.rtp.raleigh.ibm.com/Y9CM3C756/system-config.git
       dest: /opt/system-config/production
       force: yes
   - shell: ./install_modules.sh

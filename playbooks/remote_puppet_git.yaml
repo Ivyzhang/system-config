@@ -5,7 +5,7 @@
   tasks:
     # Note that git module does ls-remote if clone is set to no and places
     # the remote_head value in returndict.after
-    - git: repo=ssh://xivgit.xiv.ibm.com/git/host/devops/openstack_ci/project_config.git clone=no
+    - git: repo=https://gitlabhost.rtp.raleigh.ibm.com/Y9CM3C756/project-config.git clone=no
       register: gitinfo
   roles:
     - role: puppet
