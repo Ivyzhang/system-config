@@ -12,7 +12,7 @@ class openstack_project::server (
   $ca_server                 = undef,
   $enable_unbound            = false,
   $afs                       = false,
-  $puppetmaster_server       = 'ci-puppet-master.openstacklocal',
+  $puppetmaster_server       = 'puppet-master-prod.openstacklocal',
   $afs_cache_size            = 500000,
   $manage_exim               = true,
   $pypi_index_url            = 'https://pypi.python.org/simple',

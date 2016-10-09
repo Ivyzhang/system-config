@@ -1,6 +1,6 @@
 
 #node-OS: precise
-node 'ci-puppet-master.openstacklocal' {
+node 'puppet-master-prod.openstacklocal' {
   class { 'openstack_project::server':
     iptables_public_tcp_ports => [8140],
     sysadmins                 => hiera('sysadmins', []),
@@ -67,7 +67,7 @@ node 'ci-jenkins-master.openstacklocal' {
     iptables_rules6           => $iptables_rule,
     iptables_rules4           => $iptables_rule,
     sysadmins                 => hiera('sysadmins', []),
-    puppetmaster_server       => 'ci-puppet-master.openstacklocal',
+    puppetmaster_server       => 'puppet-master-prod.openstacklocal',
   }
   class { 'openstack_project::jenkins':
     project_config_repo     => 'https://gitlabhost.rtp.raleigh.ibm.com/Y9CM3C756/project-config.git',
