@@ -4,7 +4,7 @@
 # and so on.
 class openstack_project::simple_slave(
   $certname = $::fqdn,
-  $install_users = true
+  $install_users = false
 ) {
   class { 'openstack_project::base':
     certname      => $certname,

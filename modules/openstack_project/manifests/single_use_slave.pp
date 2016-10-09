@@ -8,7 +8,7 @@
 # periodically.
 class openstack_project::single_use_slave (
   $certname = $::fqdn,
-  $install_users = true,
+  $install_users = false,
   $install_resolv_conf = false,
   $sudo = false,
   $thin = true,

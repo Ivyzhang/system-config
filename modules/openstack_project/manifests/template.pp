@@ -8,7 +8,7 @@ class openstack_project::template (
   $iptables_rules4           = [],
   $iptables_rules6           = [],
   $pin_puppet                = '3.',
-  $install_users             = true,
+  $install_users             = false,
   $install_resolv_conf       = false,
   $automatic_upgrades        = true,
   $certname                  = $::fqdn,
