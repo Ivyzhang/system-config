@@ -27,7 +27,8 @@ class openstack_project::puppetmaster (
     content => "$gaistr",
   }
   class { '::ansible':
-    ansible_hostfile => '/etc/ansible/hosts',
+    ansible_hostfile    => '/etc/ansible/hosts',
+    retry_files_enabled => 'False',
   }
 
   file { '/etc/ansible/hostfile':
@@ -93,6 +94,22 @@ class openstack_project::puppetmaster (
     minute      => '0',
     command     => 'sleep $((RANDOM\%600)) && find /var/lib/puppet/reports -name \'*.json\' -mtime +5 -execdir rm {} \;',
     environment => 'PATH=/var/lib/gems/1.8/bin:/usr/bin:/bin:/usr/sbin:/sbin',
+  }
+
+  file { '/etc/puppet/hieradata':
+    ensure => directory,
+    group  => 'puppet',
+    mode   => '0750',
+    owner  => 'puppet',
+  }
+
+  file { '/etc/puppet/hieradata/production':
+    ensure  => directory,
+    group   => 'puppet',
+    mode    => '0750',
+    owner   => 'root',
+    recurse => true,
+    require => File['/etc/puppet/hieradata'],
   }
 
   file { '/var/lib/puppet/reports':
@@ -172,9 +189,13 @@ class openstack_project::puppetmaster (
   }
 
 # For launch/launch-node.py.
-  package { 'shade':
+  $pip_packages = [
+    'shade',
+    'python-openstackclient',
+  ]
+  package { $pip_packages:
     ensure   => latest,
-    provider => pip,
+    provider => openstack_pip,
   }
   package { 'python-paramiko':
     ensure => present,
