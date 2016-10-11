@@ -1,5 +1,5 @@
 ---
-- hosts: 'ci-jenkins-master.openstacklocal'
+- hosts: 'jenkins-master-prod.openstacklocal'
   # Do the entire play completely for one host at a time
   serial: 1
   # Treat any errors as fatal so that we don't stop all the jenkins

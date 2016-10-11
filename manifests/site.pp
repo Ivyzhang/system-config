@@ -39,7 +39,7 @@ node 'ci-zuul.openstacklocal' {
     statsd_host                    => 'graphite.openstack.org',
     gearman_workers                => [
       'ci-nodepool.openstacklocal',
-      'ci-jenkins-master.openstacklocal',
+      'jenkins-master-prod.openstacklocal',
       'ci-zuul.openstacklocal',
     ],
   }
@@ -57,7 +57,7 @@ node 'ci-zuul.openstacklocal' {
   }
 }
 
-node 'ci-jenkins-master.openstacklocal' {
+node 'jenkins-master-prod.openstacklocal' {
   $group = "jenkins"
   $zmq_event_receivers = ['ci-nodepool.openstacklocal']
   $iptables_rule = regsubst ($zmq_event_receivers,
@@ -99,8 +99,8 @@ node 'ci-nodepool.openstacklocal' {
     logging_conf_template    => 'openstack_project/nodepool/nodepool.logging.conf.erb',
     jenkins_masters          => [
       {
-        name        => 'ci-jenkins-master.openstacklocal',
-        url         => 'https://ci-jenkins-master.openstacklocal/',
+        name        => 'jenkins-master-prod.openstacklocal',
+        url         => 'https://jenkins-master-prod.openstacklocal/',
         user        => hiera('jenkins_api_user', 'jenkins'),
         apikey      => hiera('jenkins_api_key'),
         credentials => hiera('jenkins_credentials_id'),

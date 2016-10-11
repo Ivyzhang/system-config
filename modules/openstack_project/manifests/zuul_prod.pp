@@ -24,7 +24,7 @@ class openstack_project::zuul_prod(
   $proxy_ssl_chain_file_contents = '',
   $sysadmins = [],
   $statsd_host = '',
-  $gearman_workers = ['ci-jenkins-master'],
+  $gearman_workers = ['jenkins-master-prod'],
   $project_config_repo = '',
   $git_email = 'jenkins@openstack.org',
   $git_name = 'OpenStack Jenkins',
