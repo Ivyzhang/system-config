@@ -21,12 +21,12 @@ class openstack_project::template (
   $sysadmins                 = [],
   $pypi_index_url            = 'https://pypi.python.org/simple',
   $purge_apt_sources         = false,
+  $permit_root_login         = 'yes',
 ) {
 
   ###########################################################
   # Classes for all hosts
 
-  include ntp
   include snmpd
   include sudoers
 
@@ -34,7 +34,9 @@ class openstack_project::template (
   include openstack_project::users
 
   class { 'ssh':
+    trusted_ssh_type   => 'address',
     trusted_ssh_source => $puppetmaster_server,
+    permit_root_login  => $permit_root_login,
   }
 
   file_line { 'Allow root login':
@@ -171,6 +173,10 @@ class openstack_project::template (
   ###########################################################
   # Package resources for all operating systems
 
+  package { 'at':
+    ensure => present,
+  }
+
   package { 'lvm2':
     ensure => present,
   }
@@ -240,6 +246,32 @@ class openstack_project::template (
   }
 
   ###########################################################
+  # Manage  ntp
+
+  include '::ntp'
+
+  if ($::osfamily == "RedHat") {
+    # Utils in ntp-perl are included in Debian's ntp package; we
+    # add it here for consistency.  See also
+    # https://tickets.puppetlabs.com/browse/MODULES-3660
+    package { 'ntp-perl':
+      ensure => present
+    }
+    # NOTE(pabelanger): We need to ensure ntpdate service starts on boot for
+    # centos-7.  Currently, ntpd explicitly require ntpdate to be running before
+    # the sync process can happen in ntpd.  As a result, if ntpdate is not
+    # running, ntpd will start but fail to sync because of DNS is not properly
+    # setup.
+    package { 'ntpdate':
+      ensure => present,
+    }
+    service { 'ntpdate':
+      enable => true,
+      require => Package['ntpdate'],
+    }
+  }
+
+  ###########################################################
   # Manage  python/pip
 
   $desired_virtualenv = '13.1.0'
@@ -258,7 +290,7 @@ class openstack_project::template (
   }
   package { 'virtualenv':
     ensure   => $virtualenv_ensure,
-    provider => pip,
+    provider => openstack_pip,
     require  => Class['pip'],
   }
 
@@ -301,7 +333,7 @@ class openstack_project::template (
   }
 
   file_line { 'ensure NoRoaming for ssh clients':
-    after => '^Host *',
+    after => '^Host \*',
     path  => '/etc/ssh/ssh_config',
     line  => '    UseRoaming no',
   }
@@ -354,6 +386,14 @@ class openstack_project::template (
           'server' => 'pgp.mit.edu',
         },
       }
+    }
+
+    file { '/etc/security/limits.d/60-nofile-limit.conf':
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0644',
+      source  => 'puppet:///modules/openstack_project/debian_limits.conf',
+      replace => true,
     }
 
     file { '/etc/apt/apt.conf.d/80retry':
