@@ -1,5 +1,5 @@
 ---
-- hosts: ci-zuul.openstacklocal
+- hosts: zuul-prod.openstacklocal
   gather_facts: False
   remote_user: root
   sudo: yes
@@ -50,7 +50,7 @@
   sudo: yes
   tasks:
   - shell: invoke-rc.d gerrit start
-- hosts: ci-zuul.openstacklocal
+- hosts: zuul-prod.openstacklocal
   gather_facts: False
   remote_user: root
   sudo: yes

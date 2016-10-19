@@ -15,7 +15,7 @@ node 'puppet-master-prod.openstacklocal' {
   }
 }
 
-node 'ci-zuul.openstacklocal' {
+node 'zuul-prod.openstacklocal' {
   class { 'openstack_project::zuul_prod':
     project_config_repo            => 'https://gitlabhost.rtp.raleigh.ibm.com/Y9CM3C756/project-config.git',
     gerrit_server                  => 'review.openstack.org',
@@ -40,13 +40,13 @@ node 'ci-zuul.openstacklocal' {
     gearman_workers                => [
       'ci-nodepool.openstacklocal',
       'jenkins-master-prod.openstacklocal',
-      'ci-zuul.openstacklocal',
+      'zuul-prod.openstacklocal',
     ],
   }
 
   class { 'openstackci::zuul_merger':
     vhost_name               => $::fqdn,
-    gearman_server           => 'ci-zuul.openstacklocal',
+    gearman_server           => 'zuul-prod.openstacklocal',
     gerrit_server            => 'review.openstack.org',
     gerrit_user              => 'ibm_storage_ci',
     zuul_ssh_private_key     => hiera('zuul_ssh_private_key_contents'),
