@@ -38,7 +38,7 @@ node 'zuul-prod.openstacklocal' {
     sysadmins                      => hiera('sysadmins', []),
     statsd_host                    => 'graphite.openstack.org',
     gearman_workers                => [
-      'ci-nodepool.openstacklocal',
+      'nodepool-prod.openstacklocal',
       'jenkins-master-prod.openstacklocal',
       'zuul-prod.openstacklocal',
     ],
@@ -59,7 +59,7 @@ node 'zuul-prod.openstacklocal' {
 
 node 'jenkins-master-prod.openstacklocal' {
   $group = "jenkins"
-  $zmq_event_receivers = ['ci-nodepool.openstacklocal']
+  $zmq_event_receivers = ['nodepool-prod.openstacklocal']
   $iptables_rule = regsubst ($zmq_event_receivers,
                              '^(.*)$', '-m state --state NEW -m tcp -p tcp --dport 8888 -s \1 -j ACCEPT')
   class { 'openstack_project::server':
@@ -80,7 +80,7 @@ node 'jenkins-master-prod.openstacklocal' {
   }
 }
 
-node 'ci-nodepool.openstacklocal' {
+node 'nodepool-prod.openstacklocal' {
   $clouds_yaml = template("openstack_project/nodepool/clouds.yaml.erb") 
   class { 'openstack_project::server':
     sysadmins                 => hiera('sysadmins', []),
@@ -89,7 +89,7 @@ node 'ci-nodepool.openstacklocal' {
   }
 
   class { '::openstackci::nodepool':
-    vhost_name               => 'ci-nodepool.openstacklocal',
+    vhost_name               => 'nodepool-prod.openstacklocal',
     project_config_repo      => 'https://gitlabhost.rtp.raleigh.ibm.com/Y9CM3C756/project-config.git',
     mysql_password           => hiera('nodepool_mysql_password'),
     mysql_root_password      => hiera('nodepool_mysql_root_password'),
