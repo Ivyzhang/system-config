@@ -82,11 +82,17 @@ node 'jenkins-master-prod.openstacklocal' {
 
 node 'nodepool-prod.openstacklocal' {
   $clouds_yaml = template("openstack_project/nodepool/clouds.yaml.erb") 
+  $zk_receivers = ['nodepool-prod.openstacklocal']
+
   class { 'openstack_project::server':
     sysadmins                 => hiera('sysadmins', []),
     iptables_public_tcp_ports => [80],
 # Node-OS: centos7
   }
+
+  class { '::zookeeper': }
+
+  include openstack_project
 
   class { '::openstackci::nodepool':
     vhost_name               => 'nodepool-prod.openstacklocal',
