@@ -22,7 +22,7 @@ node 'zuul-prod.openstacklocal' {
     gerrit_user                    => 'ibm_storage_ci',
     gerrit_ssh_host_key            => hiera('gerrit_ssh_rsa_pubkey_contents'),
     zuul_ssh_private_key           => hiera('zuul_ssh_private_key_contents'),
-    url_pattern                    => 'http://dal05.objectstorage.softlayer.net/v1/AUTH_0bd27569-6310-44fc-8a8d-36a112cac4ec/IBM-STORAGE-CI/{job.name}/{build.number}'
+    url_pattern                    => 'http://dal05.objectstorage.softlayer.net/v1/AUTH_0bd27569-6310-44fc-8a8d-36a112cac4ec/IBM-STORAGE-CI/{job.name}/{build.number}',
     swift_authurl                  => 'https://identity.api.rackspacecloud.com/v2.0/',
     swift_user                     => 'infra-files-rw',
     swift_key                      => hiera('infra_files_rw_password', 'XXX'),
