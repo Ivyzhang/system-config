@@ -14,6 +14,7 @@ class openstack_project::zuul_dev(
   $statsd_host = '',
   $gearman_workers = [],
   $project_config_repo = '',
+  $layout_file_name = 'ibm-layout.yaml',
 ) {
 
   realize (
@@ -46,6 +47,7 @@ class openstack_project::zuul_dev(
     git_name                 => 'OpenStack Jenkins',
     project_config_repo      => $project_config_repo,
     project_config_base      => 'dev/',
+    layout_file_name         => $layout_file_name,
   }
 
   class { 'openstackci::zuul_merger':
