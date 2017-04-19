@@ -33,25 +33,25 @@ class openstack_project::template (
   include openstack_project::params
   include openstack_project::users
 
-  class { 'ssh':
-    trusted_ssh_type   => 'address',
-    trusted_ssh_source => $puppetmaster_server,
-    permit_root_login  => $permit_root_login,
-  }
+  #class { 'ssh':
+  #  trusted_ssh_type   => 'address',
+  #  trusted_ssh_source => $puppetmaster_server,
+  #  permit_root_login  => $permit_root_login,
+  #}
 
-  file_line { 'Allow root login':
-    path => '/etc/ssh/sshd_config',
-    line => 'PermitRootLogin yes',
-    match => "^PermitRootLogin.*$",
-    notify => Service['ssh'],
-  }
+  #file_line { 'Allow root login':
+  #  path => '/etc/ssh/sshd_config',
+  #  line => 'PermitRootLogin yes',
+  #  match => "^PermitRootLogin.*$",
+  #  notify => Service['ssh'],
+  #}
 
-  file_line { 'Allow password auth':
-    path => '/etc/ssh/sshd_config',
-    line => 'PasswordAuthentication yes',
-    match => "^PasswordAuthentication.*$",
-    notify => Service['ssh'],
-  }
+  #file_line { 'Allow password auth':
+  #  path => '/etc/ssh/sshd_config',
+  #  line => 'PasswordAuthentication yes',
+  #  match => "^PasswordAuthentication.*$",
+  #  notify => Service['ssh'],
+  #}
 
   if ( $afs ) {
     $all_udp = concat(
