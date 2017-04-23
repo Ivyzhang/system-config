@@ -1,3 +1,11 @@
+#
+# Default: should at least behave like an openstack server
+#
+node default {
+  class { 'openstack_project::server':
+    sysadmins => hiera('sysadmins', []),
+  }
+}
 
 #node-OS: precise
 node 'puppet-master-prod.openstacklocal' {
@@ -114,3 +122,20 @@ node 'nodepool-prod.openstacklocal' {
     ],
   }
 }
+
+# Node-OS: centos7
+# Node-OS: fedora24
+# Node-OS: fedora25
+# Node-OS: jessie
+# Node-OS: trusty
+# Node-OS: xenial
+# This is not meant to be an actual node that connects to the master.
+# This is a dummy node definition to trigger a test of the code path used by
+# nodepool's prepare_node scripts in the apply tests
+# NOTE(pabelanger): These are the current settings we use for devstack-* nodes.
+node 'single-use-slave-devstack' {
+  class { 'openstack_project::single_use_slave':
+    sudo => true,
+  }
+}
+
