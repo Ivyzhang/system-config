@@ -239,13 +239,9 @@ class openstack_project::server (
     pin_puppet                => $pin_puppet,
     ca_server                 => $ca_server,
     puppetmaster_server       => $puppetmaster_server,
-    enable_unbound            => $enable_unbound,
     afs                       => $afs,
     afs_cache_size            => $afs_cache_size,
-    manage_exim               => $manage_exim,
     sysadmins                 => $sysadmins,
-    pypi_index_url            => $pypi_index_url,
-    purge_apt_sources         => $purge_apt_sources,
   }
 
 }
