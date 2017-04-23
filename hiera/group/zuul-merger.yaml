@@ -1,0 +1,69 @@
+---
+zuul_sites:
+  - name: 'tarballs.openstack.org'
+    host: 'tarballs.openstack.org'
+    user: 'jenkins'
+    root: '/srv/static'
+
+  - name: 'yaml2ical'
+    host: 'eavesdrop.openstack.org'
+    user: 'jenkins'
+    root: '/srv/yaml2ical'
+
+  - name: 'static.openstack.org'
+    host: 'static.openstack.org'
+    user: 'jenkins'
+    root: '/srv/static'
+
+  - name: 'docs.openstack.org'
+    host: 'ftp3.ftptoyoursite.com'
+    user: 'openstackdocs'
+    pass: "%{hiera('openstackdocs_ftp_password')}"
+    root: '/web/content'
+
+  - name: 'afs-docs'
+    root: '/afs/.openstack.org/docs'
+    keytab: '/etc/zuul-launcher.keytab'
+    user: 'service/zuul-launcher'
+
+  - name: 'api.openstack.org'
+    host: 'ftp3.ftptoyoursite.com'
+    user: 'cloudapidocs'
+    pass: "%{hiera('cloudapidocs_ftp_password')}"
+    root: '/web/content'
+
+  - name: 'developer.openstack.org'
+    host: 'ftp3.ftptoyoursite.com'
+    user: 'clouddevdocs'
+    pass: "%{hiera('clouddevdocs_ftp_password')}"
+    root: '/web/content'
+
+  - name: 'afs-developer-docs'
+    root: '/afs/.openstack.org/developer-docs'
+    keytab: '/etc/zuul-launcher.keytab'
+    user: 'service/zuul-launcher'
+
+zuul_nodes:
+  - name: 'proposal.slave.openstack.org'
+    host: 'proposal.slave.openstack.org'
+    labels: 'proposal'
+
+  - name: 'release.slave.openstack.org'
+    host: 'release.slave.openstack.org'
+    labels: 'release'
+
+  - name: 'signing01.ci.openstack.org'
+    host: 'signing01.ci.openstack.org'
+    labels: 'signing'
+
+  - name: 'wheel-mirror-centos-7-amd64.slave.openstack.org'
+    host: 'wheel-mirror-centos-7-amd64.slave.openstack.org'
+    labels: 'wheel-mirror-centos-7-amd64'
+
+  - name: 'wheel-mirror-ubuntu-trusty-amd64.slave.openstack.org'
+    host: 'wheel-mirror-ubuntu-trusty-amd64.slave.openstack.org'
+    labels: 'wheel-mirror-ubuntu-trusty-amd64'
+
+  - name: 'wheel-mirror-ubuntu-xenial-amd64.slave.openstack.org'
+    host: 'wheel-mirror-ubuntu-xenial-amd64.slave.openstack.org'
+    labels: 'wheel-mirror-ubuntu-xenial-amd64'

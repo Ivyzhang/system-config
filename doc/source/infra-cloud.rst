@@ -62,21 +62,20 @@ Implementation
 Multi-Site
 ----------
 
-There are at least two "sites" with a collection of servers in each
-site. Each site will have its own cloud, and these clouds will share no
-infrastructure or data. The racks may be in the same physical location,
-but they will be managed as if they are not.
+Despite the servers being in the same physical location and network,
+they are divided in at least two logical "sites", vanilla and chocolate,
+Each site will have its own cloud, and these clouds will share no data.
 
-HP1
-~~~
+Vanilla
+~~~~~~~
 
-The HP1 site has 48 machines. Each machine has 96G of RAM, 1.8TiB of disk and
+The vanilla cloud has 48 machines. Each machine has 96G of RAM, 1.8TiB of disk and
 24 Cores of Intel Xeon X5650 @ 2.67GHz processors.
 
-HP2
-~~~
+Chocolate
+~~~~~~~~~
 
-The HP2 site has 100 machines. Each machine has 96G of RAM, 1.8TiB of disk and
+The chocolate cloud has 100 machines. Each machine has 96G of RAM, 1.8TiB of disk and
 32 Cores of Intel Xeon E5-2670 0 @ 2.60GHz processors.
 
 Software
@@ -89,13 +88,18 @@ possible. In the future the cloud may be continuously deployed.
 Management
 ----------
 
- * A "Ironic Controller" machine is installed by hand into each site. That
-   machine is enrolled into the puppet/ansible infrastructure.
+ * Currently a single "Ironic Controller" is installed by hand and used by both
+   sites. That machine is enrolled into the puppet/ansible infrastructure and
+   can be reached at baremetal00.vanilla.ic.openstack.org.
 
  * The "Ironic Controller" will have bifrost installed on it. All of the
    other machines in that site will be enrolled in the Ironic that bifrost
    manages. bifrost will be responsible for booting base OS with IP address
    and ssh key for each machine.
+
+ * You can interact with the Bifrost Ironic installation by sourcing
+   ``/opt/stack/bifrost/env-vars`` then running the ironic cli client (for
+   example: ``ironic node-list``).
 
  * The machines will all be added to a manual ansible inventory file adjacent
    to the dynamic inventory that ansible currently uses to run puppet. Any

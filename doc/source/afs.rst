@@ -76,6 +76,7 @@ site with a read-only volume is online, it will be available.
 
 Client Configuration
 --------------------
+.. _afs_client:
 
 To use OpenAFS on a Debian or Ubuntu machine::
 
@@ -214,6 +215,11 @@ system from a region-wide outage.
 
 In order to establish a new mirror, do the following:
 
+* The following commands need to be run authenticated on a host with
+  kerberos and AFS setup (see `afs_client`_; admins can run the
+  commands on ``mirror-update.openstack.org``).  Firstly ``kinit`` and
+  ``aklog`` to get tokens.
+
 * Create the mirror volume.  See `Creating a Volume`_ for details.
   The volume should be named ``mirror.foo``, where `foo` is
   descriptive of the contents of the mirror.  Example::
@@ -247,9 +253,9 @@ point is composed of read-only volumes::
       /mirror      [mirror]
         /bar       [mirror.bar]
 
-In order to mount the mirror.foo volume under ``mirror`` we need to
-modify the read-write version of the ``mirror`` volume.  To make this
-easy, the read-write version of the cell root is mounted at
+In order to mount the ``mirror.foo`` volume under ``mirror`` we need
+to modify the read-write version of the ``mirror`` volume.  To make
+this easy, the read-write version of the cell root is mounted at
 ``/afs/.openstack.org``.  Folllowing the same logic from earlier,
 traversing to paths below that mount point will generally prefer
 read-write volumes.
@@ -271,7 +277,25 @@ read-write volumes.
     kadmin: addprinc -randkey service/foo-mirror@OPENSTACK.ORG
     kadmin: ktadd -k /path/to/foo.keytab service/foo-mirror@OPENSTACK.ORG
 
-* Add the service principal's keytab to hiera.
+* Add the service principal's keytab to hiera.  Copy the binary key to
+  ``puppetmaster.openstack.org`` and then use ``hieraedit`` to update
+  the files
+
+  .. code-block:: console
+
+    root@puppetmaster:~# /opt/system-config/production/tools/hieraedit.py \
+      --yaml /etc/puppet/hieradata/production/fqdn/mirror-update.openstack.org.yaml \
+      -f /path/to/foo.keytab KEYNAME
+
+  (don't forget to ``git commit`` and save the change; you can remove
+  the copies of the binary key too).  The key will be base64 encoded
+  in the heira database.  If you need to examine it for some reason
+  you can use ``base64``::
+
+    cat /path/to/foo.keytab | base64
+
+* Add the new key to ``mirror-update.openstack.org`` in
+  ``manifests/site.pp`` for the mirror scripts to use during update.
 
 * Create an AFS user for the service principal::
 
@@ -309,17 +333,21 @@ membership if our needs change.
 Because the initial replication may take more time than we allocate in
 our mirror update cron jobs, manually perform the first mirror update:
 
-* In screen, obtain the lock on mirror-update.openstack.org::
+* In screen, obtain the lock on ``mirror-update.openstack.org``::
 
     flock -n /var/run/foo-mirror/mirror.lock bash
 
   Leave that running while you perform the rest of the steps.
 
-* Also in screen on mirror-update, run the initial mirror sync.
+* Also in screen on ``mirror-update``, run the initial mirror sync.
+  If using one of the mirror update scripts (from ``/usr/local/bin``)
+  be aware that they generally run the update process under
+  ``timeout`` with shorter periods than may be required for the
+  initial full sync.
 
-* Log into afs01.dfw.openstack.org and run screen.  Within that
-  session, periodically during the sync, and once again after it is
-  complete, run::
+* Log into ``afs01.dfw.openstack.org`` and run ``screen``.  Within
+  that session, periodically during the sync, and once again after it
+  is complete, run::
 
     vos release mirror.foo -localauth
 
@@ -333,3 +361,67 @@ our mirror update cron jobs, manually perform the first mirror update:
 
 * Once the initial sync and and ``vos release`` are complete, release
   the lock file on mirror-update.
+
+Removing a mirror
+~~~~~~~~~~~~~~~~~
+
+If you need to remove a mirror, you can do the following:
+
+* Unmount the volume from the R/W location::
+
+    fs rmmount /afs/.openstack.org/mirror/foo
+
+* Release the R/O mirror volume to reflect the changes::
+
+    vos release mirror
+
+* Check what servers the volumes are on with ``vos listvldb``::
+
+    VLDB entries for all servers
+    ...
+
+    mirror.foo
+        RWrite: 536870934     ROnly: 536870935
+        number of sites -> 3
+           server afs01.dfw.openstack.org partition /vicepa RW Site
+           server afs01.dfw.openstack.org partition /vicepa RO Site
+           server afs01.ord.openstack.org partition /vicepa RO Site
+     ...
+
+* Remove the R/O replicas (you can also see these with ``vos
+  listvol -server afs0[1|2].dfw.openstack.org``)::
+
+    vos remove -server afs01.dfw.openstack.org -partition a -id mirror.foo.readonly
+    vos remove -server afs02.dfw.openstack.org -partition a -id mirror.foo.readonly
+
+* Remove the R/W volume::
+
+    vos remove -server afs02.dfw.openstack.org -partition a -id mirror.foo
+
+Reverse Proxy Cache
+^^^^^^^^^^^^^^^^^^^
+
+* `modules/openstack_project/templates/mirror.vhost.erb
+  <https://git.openstack.org/cgit/openstack-infra/system-config/tree/modules/openstack_project/templates/mirror.vhost.erb>`__
+
+Each of the region-local mirror hosts exposes a limited reverse HTTP
+proxy on port 8080.  These proxies run within the same Apache setup as
+used to expose AFS mirror contents.  `mod_cache
+<https://httpd.apache.org/docs/2.4/mod/mod_proxy.html>`__ is used to
+expose a white-listed set of resources (currently just RDO).
+
+Currently they will cache data for up to 24 hours (Apache default)
+with pruning performed by ``htcacheclean`` once an hour to keep the
+cache size at or under 2GB of disk space.
+
+The reverse proxy is provided because there are some hosted resources
+that are not currently able to be practically mirrored.  Examples of
+this include RDO (rsync from RDO is slow and they update frequently)
+and docker images (which require specialized software to run a docker
+registry and then sorting out how to run that on a shared filesystem).
+
+Apache was chosen because we already had configuration management in
+place for Apache on these hosts.  This avoids management overheads of
+a completely new service deployment such as Squid or a caching docker
+registry daemon.
+

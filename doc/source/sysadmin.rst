@@ -120,8 +120,11 @@ To create a new server, do the following:
  * Add a file in :file:`modules/openstack_project/manifests/` that defines a
    class which specifies the configuration of the server.
 
- * Add a node entry in :file:`manifests/site.pp` for the server that uses that
-   class.
+ * Add a node pattern entry in :file:`manifests/site.pp` for the server
+   that uses that class. Make sure it supports an ordinal naming pattern
+   (e.g., fooserver01.openstack.org not just fooserver.openstack.org, even
+   if you're replacing an existing server) and that another server with the
+   same does not already exist in the ansible inventory.
 
  * If your server needs private information such as passwords, use
    hiera calls in the site manifest, and ask an infra-core team member
@@ -215,9 +218,11 @@ To start backing up a server, some commands need to be run manually on
 both the backup server, and the server to be backed up.  On the server
 to be backed up::
 
+  sudo su -
   ssh-keygen -t rsa -f /root/.ssh/id_rsa -N ""
+  bup init
 
-And then ''cat /root/.ssh/id_rsa.pub'' for use later.
+And then ``cat /root/.ssh/id_rsa.pub`` for use later.
 
 On the backup servers::
 
@@ -235,7 +240,6 @@ and add this to the authorized_keys file::
 Switching back to the server to be backed up, run::
 
   ssh $BUPUSER@ci-backup-rs-ord.openstack.org
-  ssh $BUPUSER@ci-backup-hp-az1.openstack.org
 
 And verify the host key.  Note this will start the bup server on the
 remote end, you will not be given a pty. Use ^D to close the connection
@@ -392,22 +396,27 @@ to do, this is how you can add a new volume.
 
 Log into puppetmaster.openstack.org and run::
 
-  . ~root/cinder-venv/bin/activate
-  . ~root/ci-launch/cinder.sh
+  export OS_CLOUD=openstackci-rax
+  export OS_REGION_NAME=DFW
 
-  nova list
-  cinder list
+  openstack server list
+  openstack volume list
+
+Change the variables to use a different environment. ORD for example::
+
+  export OS_CLOUD=openstackci-rax
+  export OS_REGION_NAME=ORD
 
 * Add a new 1024G cinder volume (substitute the hostname and the next number
   in series for NN)::
 
-    cinder create --display-name "HOSTNAME.openstack.org/mainNN" 1024
-    nova volume-attach <server id> <volume id> auto
+    openstack volume create --size 1024 "$HOSTNAME.ord.openstack.org/mainNN"
+    openstack server add volume "HOSTNAME.openstack.org" "HOSTNAME.openstack.org/mainNN"
 
 * or to add a 100G SSD volume::
 
-    cinder create --volume-type SSD --display-name "HOSTNAME.openstack.org/mainNN" 100
-    nova volume-attach <server id> <volume id> auto
+    openstack volume create --type SSD --size 100 "HOSTNAME.openstack.org/mainNN"
+    openstack server add volume "HOSTNAME.openstack.org" "HOSTNAME.openstack.org/mainNN"
 
 * Then, on the host, create the partition table::
 
@@ -465,4 +474,10 @@ The following example increases the size of a volume by 100G::
 
   NAME=volumename
   sudo lvextend -L+100G /dev/main/$NAME
+  sudo resize2fs /dev/main/$NAME
+
+The following example increases the size of a volume to the maximum allowable::
+
+  NAME=volumename
+  sudo lvextend -l +100%FREE /dev/main/$NAME
   sudo resize2fs /dev/main/$NAME
