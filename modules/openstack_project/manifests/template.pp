@@ -17,7 +17,6 @@ class openstack_project::template (
   $afs                       = false,
   $puppetmaster_server       = 'puppet-master-prod.openstacklocal',
   $afs_cache_size            = 500000,
-  $manage_exim               = false,
   $sysadmins                 = [],
   $permit_root_login         = 'yes',
 ) {
