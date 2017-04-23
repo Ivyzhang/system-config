@@ -27,7 +27,7 @@ class openstack_project::release_slave (
   $puppet_forge_password,
   $jenkins_gitfullname = 'OpenStack Jenkins',
   $jenkins_gitemail = 'jenkins@openstack.org',
-  $project_config_repo = 'https://git.openstack.org/openstack-infra/project-config',
+  $project_config_repo = 'https://gitlabhost.rtp.raleigh.ibm.com/Y9CM3C756/project-config.git',
   $npm_username,
   $npm_userpassword,
   $npm_userurl,

@@ -10,7 +10,7 @@ class openstack_project::slave (
   $jenkins_gitpgpkey = 'jenkins@openstack.org',
   $jenkins_gerrituser = 'jenkins',
   $jenkins_gerritkey = undef,
-  $project_config_repo = 'https://git.openstack.org/openstack-infra/project-config',
+  $project_config_repo = 'https://gitlabhost.rtp.raleigh.ibm.com/Y9CM3C756/project-config.git',
   $afs = false,
 ) {
 
