@@ -9,6 +9,7 @@ class openstack_project::gerrit (
   $vhost_name = $::fqdn,
   $canonicalweburl = "https://${::fqdn}/",
   $git_http_url = '',
+  $canonical_git_url = '',
   $serveradmin = 'webmaster@openstack.org',
   $ssh_host_key = '/home/gerrit2/review_site/etc/ssh_host_rsa_key',
   $ssh_project_key = '/home/gerrit2/review_site/etc/ssh_project_rsa_key',
@@ -53,7 +54,6 @@ class openstack_project::gerrit (
   $github_oauth_token = '',
   $github_project_username = '',
   $github_project_password = '',
-  $trivial_rebase_role_id = '',
   $email_private_key = '',
   $token_private_key = '',
   $replicate_local = true,
@@ -77,6 +77,13 @@ class openstack_project::gerrit (
   $report_bug_url = 'http://docs.openstack.org/infra/system-config/project.html#contributing',
   $index_threads = 1,
   $download = {},
+  $receive_max_object_size_limit = '100 m',
+  $commentlinks = [],
+  $commitmessage_params = {},
+  $its_plugins = [],
+  $its_rules = [],
+  $java_home = '',
+  $openidssourl = 'https://login.ubuntu.com/+openid',
 ) {
 
   class { 'jeepyb::openstackwatch':
@@ -107,6 +114,7 @@ class openstack_project::gerrit (
     vhost_name                          => $vhost_name,
     canonicalweburl                     => $canonicalweburl,
     git_http_url                        => $git_http_url,
+    canonical_git_url                   => $canonical_git_url,
     # opinions
     allow_drafts                        => false,
     enable_melody                       => true,
@@ -114,6 +122,7 @@ class openstack_project::gerrit (
     robots_txt_source                   => 'puppet:///modules/openstack_project/gerrit/robots.txt',
     enable_javamelody_top_menu          => false,
     # passthrough
+    java_home                           => $java_home,
     ssl_cert_file                       => $ssl_cert_file,
     ssl_key_file                        => $ssl_key_file,
     ssl_chain_file                      => $ssl_chain_file,
@@ -129,7 +138,7 @@ class openstack_project::gerrit (
     ssh_replication_rsa_key_contents    => $ssh_replication_rsa_key_contents,
     ssh_replication_rsa_pubkey_contents => $ssh_replication_rsa_pubkey_contents,
     email                               => $email,
-    openidssourl                        => 'https://login.launchpad.net/+openid',
+    openidssourl                        => $openidssourl,
     database_poollimit                  => $database_poollimit,
     container_heaplimit                 => $container_heaplimit,
     core_packedgitopenfiles             => $core_packedgitopenfiles,
@@ -141,52 +150,19 @@ class openstack_project::gerrit (
     httpd_maxthreads                    => $httpd_maxthreads,
     httpd_maxqueued                     => $httpd_maxqueued,
     httpd_maxwait                       => $httpd_maxwait,
-    commentlinks                        => [
-      {
-        name  => 'bugheader',
-        match => '([Cc]loses|[Pp]artial|[Rr]elated)-[Bb]ug:\\s*#?(\\d+)',
-        link  => 'https://launchpad.net/bugs/$2',
-      },
-      {
-        name  => 'bug',
-        match => '\\b[Bb]ug:? #?(\\d+)',
-        link  => 'https://launchpad.net/bugs/$1',
-      },
-      {
-        name  => 'story',
-        match => '\\b[Ss]tory:? #?(\\d+)',
-        link  => 'https://storyboard.openstack.org/#!/story/$1',
-      },
-      {
-        name  => 'blueprint',
-        match => '(\\b[Bb]lue[Pp]rint\\b|\\b[Bb][Pp]\\b)[ \\t#:]*([A-Za-z0-9\\-]+)',
-        link  => 'https://blueprints.launchpad.net/openstack/?searchtext=$2',
-      },
-      {
-        name  => 'testresult',
-        match => '<li>([^ ]+) <a href=\"[^\"]+\" target=\"_blank\">([^<]+)</a> : ([^ ]+)([^<]*)</li>',
-        html  => '<li class=\"comment_test\"><span class=\"comment_test_name\"><a href=\"$2\">$1</a></span> <span class=\"comment_test_result\"><span class=\"result_$3\">$3</span>$4</span></li>',
-      },
-      {
-        name  => 'launchpadbug',
-        match => '<a href=\"(https://bugs\\.launchpad\\.net/[a-zA-Z0-9\\-]+/\\+bug/(\\d+))[^\"]*\">[^<]+</a>',
-        html  => '<a href=\"$1\">$1</a>'
-      },
-      {
-        name  => 'changeid',
-        match => '(I[0-9a-f]{8,40})',
-        link  => '/#q,$1,n,z',
-      },
-      {
-        name  => 'gitsha',
-        match => '(<p>|[\\s(])([0-9a-f]{40})(</p>|[\\s.,;:)])',
-        html  => '$1<a href=\"/#q,$2,n,z\">$2</a>$3',
-      },
-    ],
+    commentlinks                        => $commentlinks,
+    its_plugins                         => $its_plugins,
+    its_rules                           => $its_rules,
     trackingids                         => [
       {
-        name   => 'storyboard',
+        name   => 'storyboard-story',
         footer => 'story:',
+        match  => '\\#?(\\d+)',
+        system => 'Storyboard',
+      },
+      {
+        name   => 'storyboard-task',
+        footer => 'task:',
         match  => '\\#?(\\d+)',
         system => 'Storyboard',
       },
@@ -215,17 +191,26 @@ class openstack_project::gerrit (
     report_bug_url                      => $report_bug_url,
     index_threads                       => $index_threads,
     download                            => $download,
+    receive_max_object_size_limit       => $receive_max_object_size_limit,
+    commitmessage_params                =>
+      {
+        maxLineLength   => '72',
+      },
   }
 
   mysql_backup::backup_remote { 'gerrit':
     database_host     => $mysql_host,
     database_user     => 'gerrit2',
     database_password => $mysql_password,
+    dest_dir          => '/home/gerrit2/mysql_backups',
+    num_backups       => '10',
     require           => Class['::gerrit'],
   }
 
   if ($testmode == false) {
-    include gerrit::cron
+    class { 'gerrit::cron':
+      gitgc_repos      => true,
+    }
     class { 'github':
       username         => $github_username,
       project_username => $github_project_username,
@@ -413,11 +398,15 @@ class openstack_project::gerrit (
           require => Class['::gerrit'],
         }
         cron { 'mirror_repack':
+          ensure      => absent,
+          user        => 'gerrit2',
+        }
+        cron { 'mirror_gitgc':
           user        => 'gerrit2',
           weekday     => '0',
           hour        => '4',
           minute      => '7',
-          command     => "find ${local_git_dir} -type d -name \"*.git\" -print -exec git --git-dir=\"{}\" repack -afd \\;",
+          command     => "find ${local_git_dir} -type d -name \"*.git\" -print -exec git --git-dir=\"{}\" gc \\;",
           environment => 'PATH=/usr/bin:/bin:/usr/sbin:/sbin',
         }
       }
@@ -478,6 +467,17 @@ class openstack_project::gerrit (
             File['/home/gerrit2/acls'],
             Class['jeepyb'],
           ],
+      }
+      cron { 'track_upstream':
+        user        => 'root',
+        hour        => '*',
+        minute      => '42',
+        command     => '/usr/local/bin/track-upstream -v -l /var/log/track_upstream.log',
+        environment => 'PATH=/usr/bin:/bin:/usr/sbin:/sbin',
+        require     => [
+            File['/home/gerrit2/projects.yaml'],
+            Class['jeepyb'],
+        ],
       }
 
       include logrotate

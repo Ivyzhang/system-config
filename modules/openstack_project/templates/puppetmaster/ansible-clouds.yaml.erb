@@ -1,28 +1,34 @@
 ansible:
+  fail_on_errors: False
+  expand_hostvars: False
   use_hostnames: True
 cache:
   expiration_time: 86400
   path: /var/cache/ansible-inventory
+  expiration:
+    server: 5
+    port: 5
+    floating-ip: 5
 clouds:
-  openstackci-bluebox:
-    region_name: RegionOne
-    auth:
-      auth_url: https://montytaylor-sjc.openstack.blueboxgrid.com:5001/v2.0
-      username: <%= @puppetmaster_clouds['openstackci_bluebox_username'] %>
-      password: <%= @puppetmaster_clouds['openstackci_bluebox_password'] %>
-      project_name: <%= @puppetmaster_clouds['openstackci_bluebox_project_name'] %>
   openstackci-internap:
-    region_name: nyj01
     profile: internap
     auth:
       username: <%= @puppetmaster_clouds['openstackci_internap_username'] %>
       password: <%= @puppetmaster_clouds['openstackci_internap_password'] %>
       project_name: <%= @puppetmaster_clouds['openstackci_internap_project_name'] %>
-    networks: 
-      - name: inap-17301-WAN2344
-        routes_externally: True
-      - name: inap-17301-LAN3328
-        routes_externally: False
+    regions:
+      - name: mtl01
+        values:
+          networks:
+            - name: inap-17301-WAN1102
+              routes_externally: True
+      - name: nyj01
+        values:
+          networks:
+            - name: inap-17301-WAN2344
+              routes_externally: True
+            - name: inap-17301-LAN3328
+              routes_externally: False
   openstackci-ovh:
     regions:
       - GRA1
@@ -47,12 +53,38 @@ clouds:
     region_name: RegionOne
     auth:
       auth_url: https://cloud1.osic.org:5000
-      username: <%= @puppetmaster_clouds['openstackci_osic_username'] %>
-      password: <%= @puppetmaster_clouds['openstackci_osic_password'] %>
-      project_name: <%= @puppetmaster_clouds['openstackci_osic_project_name'] %>
+      username: <%= @puppetmaster_clouds['openstackci_osic_cloud1_username'] %>
+      password: <%= @puppetmaster_clouds['openstackci_osic_cloud1_password'] %>
+      project_name: <%= @puppetmaster_clouds['openstackci_osic_cloud1_project_name'] %>
       project_domain_name: default
       user_domain_name: default
+    networks:
+      - name: GATEWAY_NET
+        routes_externally: true
+      - name: GATEWAY_NET_V6
+        routes_externally: true
+        routes_ipv6_externally: true
+        routes_ipv4_externally: false
     identity_api_version: '3'
+    floating_ip_source: None
+  openstackci-osic-cloud8:
+    region_name: RegionOne
+    auth:
+      auth_url: https://cloud8.weareopenstack.org:9007
+      username: <%= @puppetmaster_clouds['openstackci_osic_cloud8_username'] %>
+      password: <%= @puppetmaster_clouds['openstackci_osic_cloud8_password'] %>
+      project_name: <%= @puppetmaster_clouds['openstackci_osic_cloud8_project_name'] %>
+      project_domain_name: default
+      user_domain_name: default
+    networks:
+      - name: external-v4
+        routes_externally: true
+      - name: external-v6
+        routes_externally: true
+        routes_ipv6_externally: true
+        routes_ipv4_externally: false
+    identity_api_version: '3'
+    floating_ip_source: None
   openstackci-vexxhost:
     region_name: ca-ymq-1
     profile: vexxhost
@@ -60,3 +92,48 @@ clouds:
       username: '<%= @puppetmaster_clouds['openstackci_vexxhost_username'] %>'
       password: '<%= @puppetmaster_clouds['openstackci_vexxhost_password'] %>'
       project_name: '<%= @puppetmaster_clouds['openstackci_vexxhost_project_name'] %>'
+  openstackci-tripleo-test-cloud-rh1:
+    region_name: regionOne
+    auth:
+      auth_url: 'https://ci-overcloud.rh1.tripleo.org:13000'
+      username: <%= @puppetmaster_clouds['openstackci_tripleo_test_cloud_rh1_username'] %>
+      password: <%= @puppetmaster_clouds['openstackci_tripleo_test_cloud_rh1_password'] %>
+      project_name: <%= @puppetmaster_clouds['openstackci_tripleo_test_cloud_rh1_project_name'] %>
+      project_domain_name: default
+      user_domain_name: default
+    floating_ip_source: neutron
+    identity_api_version: '3'
+  openstackci-bluebox:
+    region_name: RegionOne
+    auth:
+      auth_url: https://montytaylor-sjc.openstack.blueboxgrid.com:5000
+      username: <%= @puppetmaster_clouds['openstackci_bluebox_username'] %>
+      password: <%= @puppetmaster_clouds['openstackci_bluebox_password'] %>
+      project_name: <%= @puppetmaster_clouds['openstackci_bluebox_project_name'] %>
+      project_domain_name: default
+      user_domain_name: default
+    identity_api_version: '3'
+  openstackci-infracloud-vanilla:
+    region_name: RegionOne
+    auth:
+      auth_url: https://controller00.vanilla.ic.openstack.org:5000
+      username: <%= @puppetmaster_clouds['openstackci_infracloud_vanilla_username'] %>
+      password: <%= @puppetmaster_clouds['openstackci_infracloud_vanilla_password'] %>
+      project_name: <%= @puppetmaster_clouds['openstackci_infracloud_vanilla_project_name'] %>
+      project_domain_name: default
+      user_domain_name: default
+    identity_api_version: '3'
+    floating_ip_source: None
+    cacert: /etc/ssl/certs/ca-certificates.crt
+  openstackci-infracloud-chocolate:
+    region_name: RegionOne
+    auth:
+      auth_url: https://controller00.chocolate.ic.openstack.org:5000
+      username: <%= @puppetmaster_clouds['openstackci_infracloud_chocolate_username'] %>
+      password: <%= @puppetmaster_clouds['openstackci_infracloud_chocolate_password'] %>
+      project_name: <%= @puppetmaster_clouds['openstackci_infracloud_chocolate_project_name'] %>
+      project_domain_name: default
+      user_domain_name: default
+    identity_api_version: '3'
+    floating_ip_source: None
+    cacert: /etc/ssl/certs/ca-certificates.crt

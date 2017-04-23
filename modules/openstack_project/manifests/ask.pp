@@ -14,8 +14,12 @@ class openstack_project::ask (
   $redis_max_memory             = '512m',
   $redis_bind                   = '127.0.0.1',
   $solr_version                 = '4.10.4',
-  $askbot_revision              = '06be25e5d1aa013a9a201a92db4b35b1ee1f3d32'
+  $askbot_revision              = '87086ebcefc5be29e80d3228e465e6bec4523fcf'
 ) {
+
+  realize (
+    User::Virtual::Localuser['mkiss'],
+  )
 
   file { '/srv/dist':
     ensure => directory,
@@ -34,7 +38,7 @@ class openstack_project::ask (
   }
 
   class { 'solr':
-    mirror    => 'http://apache.mesi.com.ar/lucene/solr',
+    mirror    => 'https://archive.apache.org/dist/lucene/solr',
     version   => $solr_version,
     cores     => [ 'core-default', 'core-en', 'core-zh' ],
     dist_root => '/srv/dist/solr',
@@ -114,6 +118,7 @@ class openstack_project::ask (
     site_ssl_cert_file_contents  => $site_ssl_cert_file_contents,
     site_ssl_key_file_contents   => $site_ssl_key_file_contents,
     site_ssl_chain_file_contents => $site_ssl_chain_file_contents,
+    template_settings            => 'openstack_project/askbot/settings.py.erb',
   }
 
   # askbot-theme openstack theme
@@ -151,5 +156,17 @@ class openstack_project::ask (
   bup::site { 'rs-ord':
     backup_user   => 'bup-ask',
     backup_server => 'ci-backup-rs-ord.openstack.org',
+  }
+
+  class { '::httpd::logrotate':
+    options => [
+      'daily',
+      'missingok',
+      'rotate 7',
+      'compress',
+      'delaycompress',
+      'notifempty',
+      'create 640 root adm',
+    ],
   }
 }

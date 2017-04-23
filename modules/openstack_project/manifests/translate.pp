@@ -22,7 +22,8 @@ class openstack_project::translate(
   $admin_users = '',
   $zanata_server_user = '',
   $zanata_server_api_key = '',
-  $zanata_wildfly_version = '',
+  $zanata_wildfly_version = '9.0.1',
+  $zanata_wildfly_install_url = 'https://repo1.maven.org/maven2/org/wildfly/wildfly-dist/9.0.1.Final/wildfly-dist-9.0.1.Final.tar.gz',
   $zanata_url = '',
   $zanata_checksum = '',
   $project_config_repo = '',
@@ -51,7 +52,8 @@ class openstack_project::translate(
     zanata_listeners            => $listeners,
     zanata_admin_users          => $admin_users,
     zanata_default_from_address => $from_address,
-    zanata_wildfly_version      => $wildfly_version,
+    zanata_wildfly_version      => $zanata_wildfly_version,
+    zanata_wildfly_install_url  => $zanata_wildfly_install_url,
     zanata_url                  => $zanata_url,
     zanata_checksum             => $zanata_checksum,
   }
@@ -124,5 +126,19 @@ class openstack_project::translate(
       'copytruncate',
     ],
     require => Exec['register-zanata-projects'],
+  }
+
+  mysql_backup::backup_remote { 'translate':
+    database_host     => $mysql_host,
+    database_user     => $mysql_user,
+    database_password => $mysql_password,
+    num_backups       => '10',
+    require           => Class['zanata'],
+  }
+
+  include bup
+  bup::site { 'rs-ord':
+    backup_user   => 'bup-translate',
+    backup_server => 'ci-backup-rs-ord.openstack.org',
   }
 }

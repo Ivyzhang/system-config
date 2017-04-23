@@ -4,13 +4,6 @@ class openstack_project::lists(
   $listadmins,
   $listpassword = ''
 ) {
-  # Using openstack_project::template instead of openstack_project::server
-  # because the exim config on this machine is almost certainly
-  # going to be more complicated than normal.
-  class { 'openstack_project::template':
-    iptables_public_tcp_ports => [25, 80, 465],
-  }
-
   $listdomain = 'lists.openstack.org'
 
   class { 'exim':
@@ -170,7 +163,7 @@ class openstack_project::lists(
 
   maillist { 'openstack-zh':
     ensure      => present,
-    admin       => 'zhaoxinyu@huawei.com',
+    admin       => 'yeluaiesec@gmail.com',
     password    => $listpassword,
     description => 'OpenStack社区中文讨论群组',
     webserver   => $listdomain,
@@ -231,6 +224,14 @@ class openstack_project::lists(
     mailserver  => $listdomain,
   }
 
+  maillist { 'interop-wg':
+    ensure      => present,
+    admin       => 'chris@openstack.org',
+    password    => $listpassword,
+    description => 'Discussions of the OpenStack Foundation Board Interoperability Working Group',
+    webserver   => $listdomain,
+    mailserver  => $listdomain,
+  }
 
   maillist { 'ambassadors':
     ensure      => present,
@@ -313,7 +314,7 @@ class openstack_project::lists(
     mailserver  => $listdomain,
   }
 
-   maillist { 'openstack-internships':
+  maillist { 'openstack-internships':
     ensure      => present,
     admin       => 'stefano@openstack.org',
     password    => $listpassword,
@@ -322,7 +323,7 @@ class openstack_project::lists(
     mailserver  => $listdomain,
   }
 
- maillist { 'foundation-testing-standards':
+  maillist { 'foundation-testing-standards':
     ensure      => present,
     admin       => 'seanroberts66@gmail.com',
     password    => $listpassword,
@@ -332,7 +333,7 @@ class openstack_project::lists(
     mailserver  => $listdomain,
   }
 
-   maillist { 'analyst-relations':
+  maillist { 'analyst-relations':
     ensure      => present,
     admin       => 'lauren@openstack.org',
     password    => $listpassword,
@@ -341,7 +342,7 @@ class openstack_project::lists(
     mailserver  => $listdomain,
   }
 
-   maillist { 'app-catalog-admin':
+  maillist { 'app-catalog-admin':
     ensure      => present,
     admin       => 'doc@aedo.net',
     password    => $listpassword,
@@ -355,6 +356,33 @@ class openstack_project::lists(
     admin       => 'jftalta@gmail.com',
     password    => $listpassword,
     description => 'List of the OpenStack Internationalization team, french local group.',
+    webserver   => $listdomain,
+    mailserver  => $listdomain,
+  }
+
+  maillist { 'release-job-failures':
+    ensure      => present,
+    admin       => 'doug@doughellmann.com',
+    password    => $listpassword,
+    description => 'Notification messages for failures from release-related build jobs.',
+    webserver   => $listdomain,
+    mailserver  => $listdomain,
+  }
+
+  maillist { 'embargo-notice':
+    ensure      => present,
+    admin       => 'jeremy@openstack.org',
+    password    => $listpassword,
+    description => 'Announcements to stakeholders for embargoed security vulnerabilities.',
+    webserver   => $listdomain,
+    mailserver  => $listdomain,
+  }
+
+  maillist { 'release-announce':
+    ensure      => present,
+    admin       => 'thierry@openstack.org',
+    password    => $listpassword,
+    description => 'Announcement of official OpenStack releases.',
     webserver   => $listdomain,
     mailserver  => $listdomain,
   }

@@ -40,6 +40,7 @@ class openstack_project::wheel_mirror_slave (
     jenkins_gitemail    => $jenkins_gitemail,
     project_config_repo => $project_config_repo,
     afs                 => true,
+    thin                => true,
   }
 
   # Create a working directory for the wheel slave, and give it to jenkins to
@@ -68,7 +69,7 @@ class openstack_project::wheel_mirror_slave (
                        'libldap2-dev', 'libmysqlclient-dev',
                        'libpq-dev', 'libsasl2-dev',
                        'libsqlite3-dev', 'libvirt-dev', 'libzmq-dev',
-                       'pkg-config', 'swig', 'uuid-dev'])
+                       'parallel', 'pkg-config', 'swig', 'uuid-dev'])
       }
      'Redhat': {
        ensure_packages(['gcc', 'gcc-c++', 'make',
@@ -79,7 +80,7 @@ class openstack_project::wheel_mirror_slave (
                         'openldap-devel', 'mariadb-devel',
                         'postgresql-devel', 'cyrus-sasl-devel',
                         'sqlite-devel', 'libvirt-devel', 'zeromq-devel',
-                        'pkgconfig', 'swig', 'uuid-devel'])
+                        'parallel', 'pkgconfig', 'swig', 'uuid-devel'])
     }
     default: {
       err "${::osfamily} not supported yet"

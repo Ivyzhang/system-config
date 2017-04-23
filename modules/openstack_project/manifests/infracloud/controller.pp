@@ -16,14 +16,17 @@ class openstack_project::infracloud::controller (
   $ssl_cert_file_contents,
   $br_name,
   $controller_public_address = $::fqdn,
-  $openstackci_password,
+  $openstackci_password = 'tmpvalue',
   $openstackci_email = 'infra-root@openstack.org',
-  $openstackjenkins_password,
+  $openstackjenkins_password = 'tmpvalue',
   $openstackjenkins_email = 'infra-root@openstack.org',
   $neutron_subnet_cidr,
   $neutron_subnet_gateway,
   $neutron_subnet_allocation_pools,
+  $mysql_max_connections = 1024,
 ) {
+  include ::openstack_project::infracloud::base
+
   class { '::infracloud::controller':
     keystone_rabbit_password         => $keystone_rabbit_password,
     neutron_rabbit_password          => $neutron_rabbit_password,
@@ -45,60 +48,11 @@ class openstack_project::infracloud::controller (
     neutron_subnet_cidr              => $neutron_subnet_cidr,
     neutron_subnet_gateway           => $neutron_subnet_gateway,
     neutron_subnet_allocation_pools  => $neutron_subnet_allocation_pools,
-  }
-
-  keystone_domain { 'infra':
-    ensure  => present,
-    enabled => true,
-  }
-
-  keystone_tenant { 'openstackci':
-    ensure      => present,
-    enabled     => true,
-    description => 'Infra Long Lived Resources',
-    domain      => 'infra',
-    require     => Keystone_domain['infra'],
-  }
-
-  keystone_tenant { 'openstackjenkins':
-    ensure      => present,
-    enabled     => true,
-    description => 'Infra short lived resources',
-    domain      => 'infra',
-    require     => Keystone_domain['infra'],
-  }
-
-  keystone_user { 'openstackci':
-    ensure   => present,
-    enabled  => true,
-    domain   => 'infra',
-    email    => $openstackci_email,
-    password => $openstackci_password,
-    require  => Keystone_tenant['openstackci'],
-  }
-
-  keystone_user { 'openstackjenkins':
-    ensure   => present,
-    enabled  => true,
-    domain   => 'infra',
-    email    => $openstackjenkins_email,
-    password => $openstackjenkins_password,
-    require  => Keystone_tenant['openstackjenkins'],
-  }
-
-  keystone_role { 'user': ensure => present }
-
-  keystone_user_role { 'openstackci::infra@openstackci::infra':
-    roles => 'user',
-  }
-
-  keystone_user_role { 'openstackjenkins::infra@openstackjenkins::infra':
-    roles => 'user',
+    mysql_max_connections            => $mysql_max_connections,
   }
 
   realize (
     User::Virtual::Localuser['colleen'],
-    User::Virtual::Localuser['rcarrillocruz'],
   )
 
 }

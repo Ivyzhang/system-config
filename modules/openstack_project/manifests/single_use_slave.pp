@@ -2,31 +2,22 @@
 #
 # This class configures single use Jenkins slaves with a few
 # toggleable options. Most importantly sudo rights for the Jenkins
-# user are by default off but can be enabled. Also, automatic_upgrades
-# are off by default as the assumption is the backing image for
-# this single use slaves will be refreshed with new packages
-# periodically.
+# user are by default off but can be enabled.
 class openstack_project::single_use_slave (
   $certname = $::fqdn,
   $install_users = false,
-  $install_resolv_conf = false,
+  $install_resolv_conf = true,
   $sudo = false,
-  $thin = true,
-  $automatic_upgrades = false,
-  $all_mysql_privs = false,
-  $enable_unbound = false,
   $ssh_key = $openstack_project::jenkins_ssh_key,
   $jenkins_gitfullname = 'OpenStack Jenkins',
   $jenkins_gitemail = 'jenkins@openstack.org',
   $project_config_repo = 'https://git.openstack.org/openstack-infra/project-config',
 ) inherits openstack_project {
   class { 'openstack_project::template':
-    certname            => $certname,
-    automatic_upgrades  => $automatic_upgrades,
-    install_users       => $install_users,
-    install_resolv_conf => $install_resolv_conf,
-    enable_unbound      => $enable_unbound,
-    iptables_rules4     =>
+    certname                  => $certname,
+    install_users             => $install_users,
+    install_resolv_conf       => $install_resolv_conf,
+    iptables_rules4           =>
       [
         # Ports 69 and 6385 allow to allow ironic VM nodes to reach tftp and
         # the ironic API from the neutron public net
@@ -39,22 +30,14 @@ class openstack_project::single_use_slave (
         '-p tcp --dport 8004 -s 172.24.4.0/23 -j ACCEPT',
         '-m limit --limit 2/min -j LOG --log-prefix "iptables dropped: "',
       ],
-  }
-  class { 'jenkins::slave':
-    ssh_key         => $ssh_key,
-    gitfullname     => $jenkins_gitfullname,
-    gitemail        => $jenkins_gitemail,
+    iptables_public_tcp_ports => [19885],
   }
 
-  class { 'openstack_project::slave_common':
-    sudo                => $sudo,
-    project_config_repo => $project_config_repo,
-  }
+  include ::haveged
 
-  if (! $thin) {
-    class { 'openstack_project::thick_slave':
-      all_mysql_privs => $all_mysql_privs,
-    }
+  class { '::jenkins::jenkinsuser':
+    ssh_key     => $ssh_key,
+    gitfullname => $jenkins_gitfullname,
+    gitemail    => $jenkins_gitemail,
   }
-
 }

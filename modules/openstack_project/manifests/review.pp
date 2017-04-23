@@ -18,8 +18,7 @@
 # http://groups.google.com/group/repo-discuss/msg/269024c966e05d6a
 
 # sshd.threads:
-# http:
-#  //groups.google.com/group/repo-discuss/browse_thread/thread/b91491c185295a71
+# http://groups.google.com/group/repo-discuss/browse_thread/thread/b91491c185295a71
 
 # httpd.maxQueued:
 # Default value is too low, should increase to new default.
@@ -71,10 +70,10 @@ class openstack_project::review (
   # welcome-message's user ssh key.
   $ssh_welcome_rsa_key_contents='',
   $ssh_welcome_rsa_pubkey_contents='',
-  # To be renamed - they're now just launchpad creds, not lp_sync
-  $lp_sync_consumer_key='',
-  $lp_sync_token='',
-  $lp_sync_secret='',
+  # Launchpad creds for bug/blueprint updates
+  $lp_access_token='',
+  $lp_access_secret='',
+  $lp_consumer_key='',
   # For gerrit's contactstore feature
   # https://review.openstack.org/Documentation/config-contact.html
   $contactstore = true,
@@ -83,16 +82,24 @@ class openstack_project::review (
   # For openstackwatch.
   $swift_username = '',
   $swift_password = '',
+  $storyboard_password = '',
   $project_config_repo = '',
   $projects_config = 'openstack_project/review.projects.ini.erb',
 ) {
+
+  $java_home = $::lsbdistcodename ? {
+    'precise' => '/usr/lib/jvm/java-7-openjdk-amd64/jre',
+    'trusty'  => '/usr/lib/jvm/java-7-openjdk-amd64/jre',
+  }
 
   class { 'project_config':
     url  => $project_config_repo,
   }
 
   class { 'openstack_project::gerrit':
+    java_home                           => $java_home,
     git_http_url                        => 'https://git.openstack.org/',
+    canonical_git_url                   => 'git://git.openstack.org/',
     ssl_cert_file                       => $ssl_cert_file,
     ssl_key_file                        => $ssl_key_file,
     ssl_chain_file                      => $ssl_chain_file,
@@ -111,16 +118,18 @@ class openstack_project::review (
     ssh_welcome_rsa_pubkey_contents     => $ssh_welcome_rsa_pubkey_contents,
     email                               => 'review@openstack.org',
       # 1 + 100 + 9 + 2 + 2 + 25 => 139(rounded up)
-    database_poollimit                  => '150',
+    database_poollimit                  => '225',
     container_heaplimit                 => '30g',
     core_packedgitopenfiles             => '4096',
     core_packedgitlimit                 => '400m',
     core_packedgitwindowsize            => '16k',
     sshd_threads                        => '100',
     index_threads                       => 4,
+    httpd_minthreads                    => '20',
+    httpd_maxthreads                    => '100',
     httpd_maxqueued                     => '200',
     war                                 =>
-      'http://tarballs.openstack.org/ci/gerrit/gerrit-v2.11.4.11.a14450f.war',
+      'http://tarballs.openstack.org/ci/gerrit/gerrit-v2.11.4.22.e0c0f29.war',
     contactstore                        => $contactstore,
     contactstore_appsec                 => $contactstore_appsec,
     contactstore_pubkey                 => $contactstore_pubkey,
@@ -140,6 +149,77 @@ class openstack_project::review (
     token_private_key                   => $token_private_key,
     swift_username                      => $swift_username,
     swift_password                      => $swift_password,
+    commentlinks                        => [
+      {
+        name  => 'bugheader',
+        match => '([Cc]loses|[Pp]artial|[Rr]elated)-[Bb]ug:\\s*#?(\\d+)',
+        link  => 'https://launchpad.net/bugs/$2',
+      },
+      {
+        name  => 'bug',
+        match => '\\b[Bb]ug:? #?(\\d+)',
+        link  => 'https://launchpad.net/bugs/$1',
+      },
+      {
+        name  => 'story',
+        match => '\\b[Ss]tory:? #?(\\d+)',
+        link  => 'https://storyboard.openstack.org/#!/story/$1',
+      },
+      {
+        name  => 'its-storyboard',
+        match => '\\b[Tt]ask:? #?(\\d+)',
+        link  => 'task: $1',
+      },
+      {
+        name  => 'blueprint',
+        match => '(\\b[Bb]lue[Pp]rint\\b|\\b[Bb][Pp]\\b)[ \\t#:]*([A-Za-z0-9\\-]+)',
+        link  => 'https://blueprints.launchpad.net/openstack/?searchtext=$2',
+      },
+      {
+        name  => 'testresult',
+        match => '<li>([^ ]+) <a href=\"[^\"]+\" target=\"_blank\" rel=\"nofollow\">([^<]+)</a> : ([^ ]+)([^<]*)</li>',
+        html  => '<li class=\"comment_test\"><span class=\"comment_test_name\"><a href=\"$2\" rel=\"nofollow\">$1</a></span> <span class=\"comment_test_result\"><span class=\"result_$3\">$3</span>$4</span></li>',
+      },
+      {
+        name  => 'launchpadbug',
+        match => '<a href=\"(https://bugs\\.launchpad\\.net/[a-zA-Z0-9\\-]+/\\+bug/(\\d+))[^\"]*\">[^<]+</a>',
+        html  => '<a href=\"$1\">$1</a>'
+      },
+      {
+        name  => 'changeid',
+        match => '(I[0-9a-f]{8,40})',
+        link  => '/#q,$1,n,z',
+      },
+      {
+        name  => 'gitsha',
+        match => '(<p>|[\\s(])([0-9a-f]{40})(</p>|[\\s.,;:)])',
+        html  => '$1<a href=\"/#q,$2,n,z\">$2</a>$3',
+      },
+    ],
+    its_plugins                        => [
+      {
+        name     => 'its-storyboard',
+        password => $storyboard_password,
+        url      => 'https://storyboard.openstack.org',
+      },
+    ],
+    its_rules                          => [
+      {
+        name       => 'change_abandoned',
+        event_type => 'change-abandoned',
+        action     => 'set-status TODO',
+      },
+      {
+        name       => 'change_in_progress',
+        event_type => 'patchset-created,change-restored',
+        action     => 'set-status REVIEW',
+      },
+      {
+        name       => 'change_merged',
+        event_type => 'change-merged',
+        action     => 'set-status MERGED',
+      },
+    ],
     download                            => {
         'command' => ['checkout', 'cherry_pick', 'pull', 'format_patch'],
         'scheme'  => ['ssh', 'anon_http', 'anon_git'],
@@ -222,9 +302,8 @@ class openstack_project::review (
     require                             => $::project_config::config_dir,
   }
 
-  gerrit::plugin { 'javamelody':
-    version => '3fefa35',
-  }
+  gerrit::plugin { 'javamelody': version       => '3fefa35' }
+  gerrit::plugin { 'its-storyboard': version   => 'a9cb131' }
 
   class { 'gerritbot':
     nick                    => 'openstackgerrit',
@@ -256,7 +335,7 @@ class openstack_project::review (
     owner   => 'gerrit2',
     group   => 'gerrit2',
     mode    => '0600',
-    content => template('openstack_project/gerrit_lp_creds.erb'),
+    content => template('openstack_project/infra_lp_creds.erb'),
     replace => true,
     require => User['gerrit2'],
   }

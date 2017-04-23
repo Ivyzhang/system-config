@@ -9,16 +9,11 @@ class openstack_project::zuul_merger(
   $zuul_ssh_private_key = '',
   layout_file_name ='ibm-layout.yaml',
   $zuul_url = "http://${::fqdn}/p",
-  $sysadmins = [],
   $git_email = 'jenkins@openstack.org',
   $git_name = 'OpenStack Jenkins',
+  $revision = 'master',
+  $manage_common_zuul = true,
 ) {
-
-  class { 'openstack_project::server':
-    iptables_public_tcp_ports => [80],
-    sysadmins                 => $sysadmins,
-  }
-
   class { 'openstackci::zuul_merger':
     vhost_name               => $vhost_name,
     gearman_server           => $gearman_server,
@@ -30,6 +25,7 @@ class openstack_project::zuul_merger(
     zuul_url                 => $zuul_url,
     git_email                => $git_email,
     git_name                 => $git_name,
-    manage_common_zuul       => true,
+    manage_common_zuul       => $manage_common_zuul,
+    revision                 => $revision,
   }
 }

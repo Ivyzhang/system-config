@@ -8,12 +8,15 @@ class openstack_project::static (
   $swift_region_name = '',
   $swift_default_container = '',
   $project_config_repo = '',
-  $ssl_cert_file = '/var/lib/puppet/ssl/certs/${vhost_name}.pem',
+  $ssl_cert_file = '',
   $ssl_cert_file_contents = '',
-  $ssl_key_file = '/var/lib/puppet/ssl/private_keys/${vhost_name}.pem',
+  $ssl_key_file = '',
   $ssl_key_file_contents = '',
   $ssl_chain_file = '',
   $ssl_chain_file_contents = '',
+  $releases_cert_file_contents = '',
+  $releases_key_file_contents = '',
+  $releases_chain_file_contents = '',
   $jenkins_gitfullname = 'OpenStack Jenkins',
   $jenkins_gitemail = 'jenkins@openstack.org',
 ) {
@@ -26,6 +29,12 @@ class openstack_project::static (
     ssh_key     => $openstack_project::jenkins_ssh_key,
     gitfullname => $jenkins_gitfullname,
     gitemail    => $jenkins_gitemail,
+  }
+
+  # This will try to index our millions of logs and docs by default
+  # and cause all sorts of IO and disk-usage issues.
+  package { 'mlocate':
+    ensure => absent,
   }
 
   include ::httpd
@@ -47,6 +56,14 @@ class openstack_project::static (
     httpd::mod { 'proxy_http':
         ensure => present,
     }
+  }
+
+  if ! defined(Httpd::Mod['alias']) {
+    httpd::mod { 'alias': ensure => present }
+  }
+
+  if ! defined(Httpd::Mod['headers']) {
+    httpd::mod { 'headers': ensure => present }
   }
 
   if ! defined(File['/srv/static']) {
@@ -252,23 +269,44 @@ class openstack_project::static (
   }
 
   ###########################################################
-  # Governance
+  # Governance (TC and UC) & Election
+
+  # Extra aliases and directories needed for vhost template:
+  $governance_aliases = {
+    '/election/' => '/srv/static/election/',
+    '/tc/'       => '/srv/static/tc/',
+    '/uc/'       => '/srv/static/uc/',
+  }
+  # Extra redirects needed for vhost template:
+  $governance_redirects = {
+    '/badges/'      => '/tc/badges/',
+    '/goals/'       => '/tc/goals/',
+    '/reference/'   => '/tc/reference/',
+    '/resolutions/' => '/tc/resolutions/',
+  }
+  # One of these must also be the docroot
+  $governance_directories = [
+    '/srv/static/election',
+    '/srv/static/governance',
+    '/srv/static/tc',
+    '/srv/static/uc',
+  ]
 
   ::httpd::vhost { 'governance.openstack.org':
     port       => 443, # Is required despite not being used.
     docroot    => '/srv/static/governance',
     priority   => '50',
     ssl        => true,
-    template   => 'openstack_project/static-http-and-https.vhost.erb',
+    template   => 'openstack_project/static-governance.vhost.erb',
     vhost_name => 'governance.openstack.org',
     require    => [
-      File['/srv/static/governance'],
+      File[$governance_directories],
       File[$cert_file],
       File[$key_file],
     ],
   }
 
-  file { '/srv/static/governance':
+  file { $governance_directories:
     ensure  => directory,
     owner   => 'jenkins',
     group   => 'jenkins',
@@ -310,14 +348,63 @@ class openstack_project::static (
   }
 
   ###########################################################
-  # legacy devstack.org site redirect
+  # legacy site redirects
 
   ::httpd::vhost { 'devstack.org':
     port          => 80,
     priority      => '50',
     docroot       => 'MEANINGLESS_ARGUMENT',
     serveraliases => ['*.devstack.org'],
-    template      => 'openstack_project/devstack.vhost.erb',
+    template      => 'openstack_project/legacy.vhost.erb',
+  }
+
+  ::httpd::vhost { 'cinder.openstack.org':
+    port          => 80,
+    priority      => '50',
+    docroot       => 'MEANINGLESS_ARGUMENT',
+    template      => 'openstack_project/legacy.vhost.erb',
+  }
+
+  ::httpd::vhost { 'glance.openstack.org':
+    port          => 80,
+    priority      => '50',
+    docroot       => 'MEANINGLESS_ARGUMENT',
+    template      => 'openstack_project/legacy.vhost.erb',
+  }
+
+  ::httpd::vhost { 'horizon.openstack.org':
+    port          => 80,
+    priority      => '50',
+    docroot       => 'MEANINGLESS_ARGUMENT',
+    template      => 'openstack_project/legacy.vhost.erb',
+  }
+
+  ::httpd::vhost { 'keystone.openstack.org':
+    port          => 80,
+    priority      => '50',
+    docroot       => 'MEANINGLESS_ARGUMENT',
+    template      => 'openstack_project/legacy.vhost.erb',
+  }
+
+  ::httpd::vhost { 'nova.openstack.org':
+    port          => 80,
+    priority      => '50',
+    docroot       => 'MEANINGLESS_ARGUMENT',
+    template      => 'openstack_project/legacy.vhost.erb',
+  }
+
+  ::httpd::vhost { 'qa.openstack.org':
+    port          => 80,
+    priority      => '50',
+    docroot       => 'MEANINGLESS_ARGUMENT',
+    template      => 'openstack_project/legacy.vhost.erb',
+  }
+
+  ::httpd::vhost { 'swift.openstack.org':
+    port          => 80,
+    priority      => '50',
+    docroot       => 'MEANINGLESS_ARGUMENT',
+    template      => 'openstack_project/legacy.vhost.erb',
   }
 
   ###########################################################
@@ -348,17 +435,45 @@ class openstack_project::static (
   ###########################################################
   # Releases
 
+  # Temporary separate HTTPS cert/key/chain for releases.o.o so that we
+  # don't have to renew the static.o.o cert just to add one SubjectAltName
+  file { '/etc/ssl/certs/releases.openstack.org.pem':
+    ensure  => present,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0644',
+    content => $releases_cert_file_contents,
+    require => File['/etc/ssl/certs'],
+  }
+  file { '/etc/ssl/private/releases.openstack.org.key':
+    ensure  => present,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0600',
+    content => $releases_key_file_contents,
+    require => File['/etc/ssl/private'],
+  }
+  file { '/etc/ssl/certs/releases.openstack.org_intermediate.pem':
+    ensure  => present,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0644',
+    content => $releases_chain_file_contents,
+    require => File['/etc/ssl/certs'],
+    before  => File['/etc/ssl/certs/releases.openstack.org.pem'],
+  }
+
   ::httpd::vhost { 'releases.openstack.org':
     port       => 443, # Is required despite not being used.
     docroot    => '/srv/static/releases',
     priority   => '50',
     ssl        => true,
-    template   => 'openstack_project/static-http-and-https.vhost.erb',
+    template   => 'openstack_project/static-releases.vhost.erb',
     vhost_name => 'releases.openstack.org',
     require    => [
       File['/srv/static/releases'],
-      File[$cert_file],
-      File[$key_file],
+      File['/etc/ssl/certs/releases.openstack.org.pem'],
+      File['/etc/ssl/private/releases.openstack.org.key'],
     ],
   }
 
@@ -368,4 +483,20 @@ class openstack_project::static (
     group   => 'jenkins',
     require => User['jenkins'],
   }
+
+
+  # Until Apache 2.4.24 the event MPM has some issues scalability
+  # bottlenecks that were seen to drop connections, especially on
+  # larger files; see
+  #  https://httpd.apache.org/docs/2.4/mod/event.html
+  #
+  # The main advantage of event MPM is for keep-alive requests which
+  # are not really a big issue on this static file server.  Therefore
+  # we switch to the threaded worker MPM as a workaround.  This can be
+  # reconsidered when the apache version running is sufficient to
+  # avoid these problems.
+
+  httpd::mod { 'mpm_event': ensure => 'absent' }
+  httpd::mod { 'mpm_worker': ensure => 'present' }
+
 }

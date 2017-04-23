@@ -10,9 +10,6 @@ class openstack_project::jenkins_params {
       $ant_package = 'ant'
       $awk_package = 'gawk'
       $asciidoc_package = 'asciidoc'
-      $docbook_xml_package = 'docbook-style-xsl'
-      $docbook5_xml_package = 'docbook5-schemas'
-      $docbook5_xsl_package = 'docbook5-style-xsl'
       $firefox_package = 'firefox'
       $graphviz_package = 'graphviz'
       $libcurl_dev_package = 'libcurl-devel'
@@ -20,7 +17,6 @@ class openstack_project::jenkins_params {
       # $libjerasure_dev_package = 'libjerasure-devel' not yet available
       $librrd_dev_package = 'rrdtool-devel'
       # packages needed by document translation
-      $gnome_doc_package = 'gnome-doc-utils'
       $gettext_package = 'gettext'
       $language_fonts_packages = []
       # for keystone ldap auth integration
@@ -80,6 +76,7 @@ class openstack_project::jenkins_params {
           Package['cgroups'],
           Package['cgroups-tools'],
         ]
+        $nss_devel = 'nss-devel'
       } else {
         $mysql_dev_package = 'mariadb-devel'
         $cgroups_tools_package = ''
@@ -91,15 +88,13 @@ class openstack_project::jenkins_params {
       $swig = "swig"
       $libjpeg_dev = "libjpeg-turbo-devel"
       $zlib_dev = "zlib-devel"
+      $systemd_dev_packages = ['systemd-devel']
     }
     'Debian': {
       # packages needed by slaves
       $ant_package = 'ant'
       $awk_package = 'gawk'
       $asciidoc_package = 'asciidoc'
-      $docbook_xml_package = 'docbook-xml'
-      $docbook5_xml_package = 'docbook5-xml'
-      $docbook5_xsl_package = 'docbook-xsl'
       $firefox_package = 'firefox'
       $graphviz_package = 'graphviz'
       $libcurl_dev_package = 'libcurl4-gnutls-dev'
@@ -110,7 +105,6 @@ class openstack_project::jenkins_params {
       $libjerasure_dev_package = 'libjerasure-dev'
       $librrd_dev_package = 'librrd-dev'
       # packages needed by document translation
-      $gnome_doc_package = 'gnome-doc-utils'
       $gettext_package = 'gettext'
       $language_fonts_packages = ['fonts-takao', 'fonts-nanum']
       # for keystone ldap auth integration
@@ -124,8 +118,14 @@ class openstack_project::jenkins_params {
       $libffi_dev_package = 'libffi-dev'
       if ($::operatingsystem == 'Ubuntu') and ($::operatingsystemrelease >= '16.04') {
         $maven_package = 'maven'
+        $systemd_dev_packages = ['libsystemd-dev']
       } else {
         $maven_package = 'maven2'
+        $systemd_dev_packages = [
+            'libsystemd-journal-dev',
+            'libsystemd-daemon-dev',
+            'libsystemd-login-dev',
+            'libsystemd-id128-dev']
       }
       # For tooz unit tests
       $memcached_package = 'memcached'
@@ -173,6 +173,7 @@ class openstack_project::jenkins_params {
       $swig = "swig"
       $libjpeg_dev = "libjpeg-dev"
       $zlib_dev = "zlib1g-dev"
+      $nss_devel = 'libnss3-dev'
     }
     default: {
       fail("Unsupported osfamily: ${::osfamily} The 'jenkins' module only supports osfamily Debian or RedHat (slaves only).")

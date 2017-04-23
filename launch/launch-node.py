@@ -20,8 +20,10 @@
 
 import argparse
 import os
+import shutil
 import subprocess
 import sys
+import threading
 import tempfile
 import time
 import traceback
@@ -43,13 +45,61 @@ except:
     pass
 
 
+class JobDir(object):
+    def __init__(self, keep=False):
+        self.keep = keep
+        self.root = tempfile.mkdtemp()
+        self.inventory_root = os.path.join(self.root, 'inventory')
+        os.makedirs(self.inventory_root)
+        self.hosts = os.path.join(self.inventory_root, 'hosts')
+        self.groups = os.path.join(self.inventory_root, 'groups')
+        self.key = os.path.join(self.root, 'id_rsa')
+        self.ansible_log = os.path.join(self.root, 'ansible_log.txt')
+        # XXX if we need more, we might like to setup an ansible.cfg
+        # file and use that rather than env vars.  See
+        # zuul/launcher/ansiblelaunchserver.py as an example
+        self.env = os.environ.copy()
+        self.env['ANSIBLE_LOG_PATH'] = self.ansible_log
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, etype, value, tb):
+        if not self.keep:
+            shutil.rmtree(self.root)
+
+
+def run(cmd, **args):
+    args['stdout'] = subprocess.PIPE
+    args['stderr'] = subprocess.STDOUT
+    print "Running: %s" % (cmd,)
+    proc = subprocess.Popen(cmd, **args)
+    out = ''
+    for line in iter(proc.stdout.readline, ''):
+        sys.stdout.write(line)
+        sys.stdout.flush()
+        out += line
+    ret = proc.wait()
+    print "Return code: %s" % (ret,)
+    if ret != 0:
+        raise subprocess.CalledProcessError(ret, cmd, out)
+    return ret
+
+
+def stream_syslog(ssh_client):
+    try:
+        ssh_client.ssh('tail -f /var/log/syslog')
+    except Exception:
+        print "Syslog stream terminated"
+
+
 def bootstrap_server(server, key, name, volume_device, keep,
-                     mount_path, fs_label):
+                     mount_path, fs_label, environment):
 
     ip = server.public_v4
     ssh_kwargs = dict(pkey=key)
 
-    print 'Public IP', ip
+    print("--- Running initial configuration on host %s ---" % ip)
     for username in ['root', 'ubuntu', 'centos', 'admin']:
         ssh_client = utils.ssh_connect(ip, username, ssh_kwargs, timeout=600)
         if ssh_client:
@@ -68,6 +118,10 @@ def bootstrap_server(server, key, name, volume_device, keep,
         ssh_client.ssh("sudo chown root.root ~root/.ssh/authorized_keys")
 
     ssh_client = utils.ssh_connect(ip, 'root', ssh_kwargs, timeout=600)
+
+    # Something up with RAX images that they have the ipv6 interface in
+    # /etc/network/interfaces but eth0 hasn't noticed yet; reload it
+    ssh_client.ssh('(ifdown eth0 && ifup eth0) || true')
 
     if server.public_v6:
         ssh_client.ssh('ping6 -c5 -Q 0x10 review.openstack.org '
@@ -88,40 +142,75 @@ def bootstrap_server(server, key, name, volume_device, keep,
                    'install_puppet.sh')
     ssh_client.ssh('bash -x install_puppet.sh')
 
-    # Write out the private SSH key we generated
-    key_file = tempfile.NamedTemporaryFile(delete=not keep)
-    key.write_private_key(key_file)
-    key_file.flush()
+    # Zero the ansible inventory cache so that next run finds the new server
+    inventory_cache = '/var/cache/ansible-inventory/ansible-inventory.cache'
+    if os.path.exists(inventory_cache):
+        with open(inventory_cache, 'w'):
+            pass
 
-    # Write out inventory
-    inventory_file = tempfile.NamedTemporaryFile(delete=not keep)
-    inventory_file.write("{host} ansible_host={ip} ansible_user=root".format(
-        host=name, ip=server.interface_ip))
-    inventory_file.flush()
+    with JobDir(keep) as jobdir:
+        # Update the generated-groups file globally and incorporate it
+        # into our inventory
+        # Remove cloud and region from the environment to work
+        # around a bug in occ
+        expand_env = os.environ.copy()
+        for env_key in expand_env.keys():
+            if env_key.startswith('OS_'):
+                expand_env.pop(env_key, None)
+        expand_env['ANSIBLE_LOG_PATH'] = jobdir.ansible_log
 
-    ansible_cmd = [
-        'ansible-playbook',
-        '-i', inventory_file.name, '-l', name,
-        '--private-key={key}'.format(key=key_file.name),
-        "--ssh-common-args='-o StrictHostKeyChecking=no'",
-        '-e', 'target={name}'.format(name=name),
-    ]
+        # Regenerate inventory cache, throwing an error if there is an issue
+        # so that we don't generate a bogus groups file
+        try:
+            run(['/etc/ansible/hosts/openstack', '--list'],
+                env=expand_env)
+        except subprocess.CalledProcessError as e:
+            print "Inventory regeneration failed"
+            print e.output
+            raise
 
-    # Run the remote puppet apply playbook limited to just this server
-    # we just created
-    try:
+        run('/usr/local/bin/expand-groups.sh',
+            env=expand_env,
+            stderr=subprocess.STDOUT)
+
+        # Write out the private SSH key we generated
+        with open(jobdir.key, 'w') as key_file:
+            key.write_private_key(key_file)
+        os.chmod(jobdir.key, 0o600)
+
+        # Write out inventory
+        with open(jobdir.hosts, 'w') as inventory_file:
+            inventory_file.write(
+                "{host} ansible_host={ip} ansible_user=root".format(
+                    host=name, ip=server.interface_ip))
+
+        os.symlink('/etc/ansible/hosts/generated-groups',
+                   jobdir.groups)
+
+        t = threading.Thread(target=stream_syslog, args=(ssh_client,))
+        t.daemon = True
+        t.start()
+
+        ansible_cmd = [
+            'ansible-playbook',
+            '-i', jobdir.inventory_root, '-l', name,
+            '--private-key={key}'.format(key=jobdir.key),
+            "--ssh-common-args='-o StrictHostKeyChecking=no'",
+            '-e', 'target={name}'.format(name=name),
+        ]
+
+        if environment is not None:
+            ansible_cmd += [
+                '-e',
+                'puppet_environment={env}'.format(env=environment)]
+        # Run the remote puppet apply playbook limited to just this server
+        # we just created
         for playbook in [
                 'set_hostnames.yml',
                 'remote_puppet_adhoc.yaml']:
-            print subprocess.check_output(
-                ansible_cmd + [
-                    os.path.join(
-                        SCRIPT_DIR, '..', 'playbooks', playbook)],
-                stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError as e:
-        print "Subprocess failed"
-        print e.output
-        raise
+            run(ansible_cmd + [
+                os.path.join(SCRIPT_DIR, '..', 'playbooks', playbook)],
+                env=jobdir.env)
 
     try:
         ssh_client.ssh("reboot")
@@ -136,7 +225,7 @@ def bootstrap_server(server, key, name, volume_device, keep,
 
 def build_server(cloud, name, image, flavor,
                  volume, keep, network, boot_from_volume, config_drive,
-                 mount_path, fs_label, availability_zone):
+                 mount_path, fs_label, availability_zone, environment):
     key = None
     server = None
 
@@ -179,18 +268,30 @@ def build_server(cloud, name, image, flavor,
         else:
             volume_device = None
         bootstrap_server(server, key, name, volume_device, keep,
-                         mount_path, fs_label)
+                         mount_path, fs_label, environment)
         print('UUID=%s\nIPV4=%s\nIPV6=%s\n' % (
             server.id, server.public_v4, server.public_v6))
     except Exception:
+        print "****"
+        print "Server %s failed to build!" % (server.id)
         try:
             if keep:
-                print "Server failed to build, keeping as requested."
+                print "Keeping as requested"
+                # Write out the private SSH key we generated, as we
+                # may not have got far enough for ansible to run
+                with open('/tmp/%s.id_rsa' % server.id, 'w') as key_file:
+                    key.write_private_key(key_file)
+                    os.chmod(key_file.name, 0o600)
+                    print "Private key saved in %s" % key_file.name
+                print "Run to delete -> openstack server delete %s" % \
+                    (server.id)
             else:
                 cloud.delete_server(server.id, delete_ips=True)
         except Exception:
             print "Exception encountered deleting server:"
             traceback.print_exc()
+        print "The original exception follows:"
+        print "****"
         # Raise the important exception that started this
         raise
 
@@ -209,6 +310,9 @@ def main():
     parser.add_argument("--image", dest="image",
                         default="Ubuntu 14.04 LTS (Trusty Tahr) (PVHVM)",
                         help="image name")
+    parser.add_argument("--environment", dest="environment",
+                        help="Puppet environment to use",
+                        default=None)
     parser.add_argument("--volume", dest="volume",
                         help="UUID of volume to attach to the new server.",
                         default=None)
@@ -234,7 +338,7 @@ def main():
     parser.add_argument("--config-drive", dest="config_drive",
                         help="Boot with config_drive attached.",
                         action='store_true',
-                        default=True)
+                        default=False)
     parser.add_argument("--az", dest="availability_zone", default=None,
                         help="AZ to boot in.")
     options = parser.parse_args()
@@ -272,23 +376,9 @@ def main():
                           options.network, options.boot_from_volume,
                           options.config_drive,
                           options.mount_path, options.fs_label,
-                          options.availability_zone)
+                          options.availability_zone,
+                          options.environment)
     dns.print_dns(cloud, server)
-
-    # Zero the ansible inventory cache so that next run finds the new server
-    inventory_cache = '/var/cache/ansible-inventory/ansible-inventory.cache'
-    if os.path.exists(inventory_cache):
-        with open(inventory_cache, 'w'):
-            pass
-    # Remove cloud and region from the environment to work around a bug in occ
-    expand_env = os.environ.copy()
-    expand_env.pop('OS_CLOUD', None)
-    expand_env.pop('OS_REGION_NAME', None)
-
-    print subprocess.check_output(
-        '/usr/local/bin/expand-groups.sh',
-        env=expand_env,
-        stderr=subprocess.STDOUT)
 
 if __name__ == '__main__':
     main()

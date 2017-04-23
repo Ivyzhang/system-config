@@ -9,7 +9,7 @@ class openstack_project::status (
   $recheck_ssh_private_key,
   $recheck_bot_passwd,
   $recheck_bot_nick,
-  $status_base_url = 'http://status.openstack.org/',
+  $status_base_url = 'http://status.openstack.org',
   $status_title = 'OpenStack',
   $graphite_render_url = 'http://graphite.openstack.org/render/',
   $jenkins_gitfullname = 'OpenStack Jenkins',
@@ -25,6 +25,14 @@ class openstack_project::status (
   }
 
   include ::httpd
+
+  # The Apache mod_version module only needs to be enabled on Ubuntu 12.04
+  # as it comes compiled and enabled by default on newer OS, including CentOS
+  if !defined(Httpd::Mod['version']) and $::operatingsystem == 'Ubuntu' and $::operatingsystemrelease == '12.04' {
+    httpd::mod { 'version':
+      ensure => present
+    }
+  }
 
   if ! defined(Httpd::Mod['rewrite']) {
     httpd::mod { 'rewrite':
@@ -109,8 +117,11 @@ class openstack_project::status (
     path        => '/bin:/usr/bin',
     refreshonly => true,
     subscribe   => Vcsrepo['/opt/jquery-visibility'],
-    require     => [File['/srv/static/status'],
-                    Vcsrepo['/opt/jquery-visibility']],
+    require     => [
+      File['/srv/static/status'],
+      Package['yui-compressor'],
+      Vcsrepo['/opt/jquery-visibility'],
+    ],
   }
 
   vcsrepo { '/opt/jquery-graphite':
@@ -138,8 +149,11 @@ class openstack_project::status (
     path        => '/bin:/usr/bin',
     refreshonly => true,
     subscribe   => Vcsrepo['/opt/flot'],
-    require     => [File['/srv/static/status'],
-                    Vcsrepo['/opt/flot']],
+    require     => [
+      File['/srv/static/status'],
+      Package['yui-compressor'],
+      Vcsrepo['/opt/flot'],
+    ],
   }
 
   ###########################################################

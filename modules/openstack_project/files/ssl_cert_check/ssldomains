@@ -1,4 +1,7 @@
 ask.openstack.org 443
+developer.openstack.org 443
+docs.openstack.org 443
+ethercalc.openstack.org 443
 etherpad.openstack.org 443
 git.openstack.org 443
 groups.openstack.org 443

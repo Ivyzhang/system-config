@@ -2,14 +2,14 @@ source-url: http://logs.openstack.org
 
 # List of zmq event inputs.
 zmq-publishers:
-  - tcp://jenkins.openstack.org:8888
-  - tcp://jenkins01.openstack.org:8888
-  - tcp://jenkins02.openstack.org:8888
-  - tcp://jenkins03.openstack.org:8888
-  - tcp://jenkins04.openstack.org:8888
-  - tcp://jenkins05.openstack.org:8888
-  - tcp://jenkins06.openstack.org:8888
-  - tcp://jenkins07.openstack.org:8888
+  - tcp://zlstatic01.openstack.org:8888
+  - tcp://zl01.openstack.org:8888
+  - tcp://zl02.openstack.org:8888
+  - tcp://zl03.openstack.org:8888
+  - tcp://zl04.openstack.org:8888
+  - tcp://zl05.openstack.org:8888
+  - tcp://zl06.openstack.org:8888
+  - tcp://zl07.openstack.org:8888
 
 subunit-files:
   - name: logs/testrepository.subunit
@@ -18,6 +18,12 @@ subunit-files:
     job-filter: '.*grenade-dsvm.*'
     build-queue-filter: 'gate'
   - name: testrepository.subunit
+    build-queue-filter: 'gate'
+  - name: logs/karma.subunit
+    job-filter: '.*npm-run.*'
+    build-queue-filter: 'gate'
+  - name: karma.subunit
+    job-filter: '.*npm-run.*'
     build-queue-filter: 'gate'
   - name: testrepository.subunit
     build-queue-filter: 'periodic'
@@ -30,7 +36,6 @@ subunit-files:
 # List of files to source logs from.
 source-files:
   - name: console.html
-    retry-get: True
     tags:
       - console
   - name: logs/devstack-gate-cleanup-host.txt
@@ -75,21 +80,41 @@ source-files:
     tags:
       - screen
       - oslofmt
+  - name: logs/screen-designate-agent.txt
+    tags:
+      - screen
+      - oslofmt
+    job-filter: '.*designate.*'
   - name: logs/screen-designate-api.txt
     tags:
       - screen
       - oslofmt
-    job-filter: '-designate-*'
+    job-filter: '.*designate.*'
   - name: logs/screen-designate-central.txt
     tags:
       - screen
       - oslofmt
-    job-filter: '-designate-*'
+    job-filter: '.*designate.*'
+  - name: logs/screen-designate-mdns.txt
+    tags:
+      - screen
+      - oslofmt
+    job-filter: '.*designate.*'
+  - name: logs/screen-designate-pool-manager.txt
+    tags:
+      - screen
+      - oslofmt
+    job-filter: '.*designate.*'
   - name: logs/screen-designate-sink.txt
     tags:
       - screen
       - oslofmt
-    job-filter: '-designate-*'
+    job-filter: '.*designate.*'
+  - name: logs/screen-designate-zone-manager.txt
+    tags:
+      - screen
+      - oslofmt
+    job-filter: '.*designate.*'
   - name: logs/screen-g-api.txt
     tags:
       - screen
@@ -190,6 +215,22 @@ source-files:
     tags:
       - screen
       - oslofmt
+  - name: logs/screen-o-api.txt
+    tags:
+      - screen
+      - oslofmt
+  - name: logs/screen-o-cw.txt
+    tags:
+      - screen
+      - oslofmt
+  - name: logs/screen-o-hk.txt
+    tags:
+      - screen
+      - oslofmt
+  - name: logs/screen-o-hm.txt
+    tags:
+      - screen
+      - oslofmt
   - name: logs/screen-q-agt.txt
     tags:
       - screen
@@ -215,10 +256,6 @@ source-files:
       - screen
       - oslofmt
   - name: logs/screen-q-svc.txt
-    tags:
-      - screen
-      - oslofmt
-  - name: logs/screen-q-vpn.txt
     tags:
       - screen
       - oslofmt
@@ -269,6 +306,16 @@ source-files:
       - screen
       - oslofmt
     job-filter: '.*grenade.*'
+
+# Neutron index log files (files with messages from all test cases)
+  - name: logs/dsvm-functional-index.txt
+    tags:
+      - oslofmt
+    job-filter: '.*neutron-dsvm-functional.*'
+  - name: logs/dsvm-fullstack-index.txt
+    tags:
+      - oslofmt
+    job-filter: '.*neutron-dsvm-fullstack.*'
 
 # Grenade new logs below
   - name: logs/new/screen-c-api.txt
@@ -377,11 +424,6 @@ source-files:
       - oslofmt
     job-filter: '.*grenade.*'
   - name: logs/new/screen-q-svc.txt
-    tags:
-      - screen
-      - oslofmt
-    job-filter: '.*grenade.*'
-  - name: logs/new/screen-q-vpn.txt
     tags:
       - screen
       - oslofmt
@@ -512,11 +554,6 @@ source-files:
       - screen
       - oslofmt
     job-filter: '.*grenade.*'
-  - name: logs/old/screen-q-vpn.txt
-    tags:
-      - screen
-      - oslofmt
-    job-filter: '.*grenade.*'
   - name: logs/old/screen-s-account.txt
     tags:
       - screen
@@ -548,74 +585,39 @@ source-files:
       - screen
       - oslofmt
     job-filter: '.*multinode.*'
+  - name: logs/subnode-2/screen-o-api.txt
+    tags:
+      - screen
+      - oslofmt
+    job-filter: '.*multinode.*'
+  - name: logs/subnode-2/screen-o-cw.txt
+    tags:
+      - screen
+      - oslofmt
+    job-filter: '.*multinode.*'
+  - name: logs/subnode-2/screen-o-hk.txt
+    tags:
+      - screen
+      - oslofmt
+    job-filter: '.*multinode.*'
+  - name: logs/subnode-2/screen-o-hm.txt
+    tags:
+      - screen
+      - oslofmt
+    job-filter: '.*multinode.*'
 # tripleo logs
-  - name: logs/get_state_from_host.txt
+  - name: logs/postci.txt
     tags:
       - console
-      - tripleo
-    job-filter: '.*-tripleo-.*'
-  # tripleo-seed
-  - name: logs/seed_logs/host-info.txt
+      - postci
+    job-filter: '.*-tripleo-ci-.*'
+  - name: logs/undercloud/var/log/undercloud_install.txt
     tags:
       - console
-      - seed
-    job-filter: '.*-tripleo-.*'
-  - name: logs/seed_logs/os-collect-config.txt
-    tags:
-      - syslog
-      - seed
-    job-filter: '.*-tripleo-.*'
-  # tripleo-seed-state-logs
-  - name: logs/seed_logs/mnt/mysql/error.txt
+      - undercloud
+    job-filter: '.*-tripleo-ci-.*'
+  - name: logs/undercloud/var/log/image_build.txt
     tags:
       - console
-      - seed
-    job-filter: '.*-tripleo-.*'
-  - name: logs/seed_logs/mnt/mysql/mysql-slow.txt
-    tags:
-      - console
-      - seed
-    job-filter: '.*-tripleo-.*'
-  # tripleo-undercloud
-  - name: logs/undercloud-undercloud_logs/host-info.txt
-    tags:
-      - console
-      - uc-controller
-    job-filter: '.*-tripleo-.*'
-  - name: logs/undercloud-undercloud_logs/os-collect-config.txt
-    tags:
-      - syslog
-      - uc-controller
-  # tripleo-undercloud-state-logs
-  - name: logs/undercloud-undercloud_logs/mnt/mysql/error.txt
-    tags:
-      - console
-      - uc-controller
-    job-filter: '.*-tripleo-.*'
-  - name: logs/undercloud-undercloud_logs/mnt/mysql/mysql-slow.txt
-    tags:
-      - console
-      - uc-controller
-    job-filter: '.*-tripleo-.*'
-  # tripleo-overcloud
-  - name: logs/overcloud-controller0_logs/host-info.txt
-    tags:
-      - console
-      - oc-controller
-    job-filter: '.*-tripleo-.*'
-  - name: logs/overcloud-controller0_logs/os-collect-config.txt
-    tags:
-      - syslog
-      - oc-controller
-    job-filter: '.*-tripleo-.*'
-  # tripleo-overcloud-state-logs
-  - name: logs/overcloud_controller0_logs/mnt/mysql/error.txt
-    tags:
-      - console
-      - overcloud
-    job-filter: '.*-tripleo-.*'
-  - name: logs/overcloud_controller0_logs/mnt/mysql/mysql-slow.txt
-    tags:
-      - console
-      - overcloud
-    job-filter: '.*-tripleo-.*'
+      - undercloud
+    job-filter: '.*-tripleo-ci-.*'

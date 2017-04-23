@@ -2,6 +2,7 @@
 class openstack_project::cacti (
   $sysadmins = [],
   $cacti_hosts = [],
+  $vhost_name = '',
 ) {
 
   if $::osfamily != 'Debian' {
@@ -13,25 +14,23 @@ class openstack_project::cacti (
     sysadmins                 => $sysadmins,
   }
 
-  include ::httpd
-
-  if ! defined(Httpd::Mod['rewrite']) {
-    httpd::mod { 'rewrite':
-        ensure => present,
-    }
+  class { '::apache':
+    default_vhost => false,
+    mpm_module => 'prefork',
   }
+  class { '::apache::mod::rewrite': }
+  class { '::apache::mod::php': }
 
   package { 'cacti':
     ensure => present,
   }
 
-  file { '/etc/apache2/conf.d/cacti.conf':
+  ::apache::listen { '80': }
+  ::apache::listen { '443': }
+
+  ::apache::vhost::custom { $::fqdn:
     ensure  => present,
-    source  => 'puppet:///modules/openstack_project/cacti/apache.conf',
-    mode    => '0644',
-    owner   => 'root',
-    group   => 'root',
-    require => Package['cacti'],
+    content => template('openstack_project/cacti.vhost.erb'),
   }
 
   file { '/usr/local/share/cacti/resource/snmp_queries':

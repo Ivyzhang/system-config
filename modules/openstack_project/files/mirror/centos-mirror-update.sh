@@ -16,7 +16,7 @@
 MIRROR_VOLUME=$1
 
 BASE="/afs/.openstack.org/mirror/centos"
-MIRROR="rsync://mirror.sfo12.us.leaseweb.net"
+MIRROR="rsync://mirrors.kernel.org"
 K5START="k5start -t -f /etc/centos.keytab service/centos-mirror -- timeout -k 2m 30m"
 
 REPO=7
@@ -24,6 +24,7 @@ if ! [ -f $BASE/$REPO ]; then
     $K5START mkdir -p $BASE/$REPO
 fi
 
+date --iso-8601=ns
 echo "Running rsync..."
 $K5START rsync -rlptDvz \
     --delete \
@@ -33,14 +34,15 @@ $K5START rsync -rlptDvz \
     --exclude="cr" \
     --exclude="fasttrack" \
     --exclude="isos" \
+    --exclude="paas" \
     --exclude="sclo" \
-    --exclude="storage" \
-    --exclude="virt" \
     $MIRROR/centos/$REPO/ $BASE/$REPO/
 
 # TODO(pabelanger): Validate rsync process
 
-echo "rsyc completed successfully, running vos release."
+date --iso-8601=ns | $K5START tee $BASE/timestamp.txt
+echo "rsync completed successfully, running vos release."
 k5start -t -f /etc/afsadmin.keytab service/afsadmin -- vos release -v $MIRROR_VOLUME
 
+date --iso-8601=ns
 echo "Done."

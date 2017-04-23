@@ -29,6 +29,7 @@ class openstack_project::puppetmaster (
   class { '::ansible':
     ansible_hostfile    => '/etc/ansible/hosts',
     retry_files_enabled => 'False',
+    ansible_version     => '2.2.1.0',
   }
 
   file { '/etc/ansible/hostfile':
@@ -37,6 +38,17 @@ class openstack_project::puppetmaster (
     group   => 'root',
     mode    => '0644',
     require => Class['ansible'],
+  }
+
+  cron { 'updatecloudlauncher':
+    user        => 'root',
+    minute      => '0',
+    hour        => '*/1',
+    monthday    => '*',
+    month       => '*',
+    weekday     => '*',
+    command     => 'flock -n /var/run/puppet/puppet_run_cloud_launcher.lock bash /opt/system-config/production/run_cloud_launcher.sh >> /var/log/puppet_run_cloud_launcher_cron.log 2>&1',
+    environment => 'PATH=/var/lib/gems/1.8/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',
   }
 
   if $update_cron {
@@ -208,6 +220,36 @@ class openstack_project::puppetmaster (
     ensure => absent,
   }
 
+  # For signing key management
+  package { 'gnupg':
+    ensure => present,
+  }
+  package { 'gnupg-curl':
+    ensure => present,
+  }
+  file { '/root/signing.gnupg':
+    ensure => directory,
+    owner  => 'root',
+    group  => 'root',
+    mode   => '0700',
+  }
+  file { '/root/signing.gnupg/gpg.conf':
+    ensure  => present,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0400',
+    source  => 'puppet:///modules/openstack_project/puppetmaster/signing.conf',
+    require => File['/root/signing.gnupg'],
+  }
+  file { '/root/signing.gnupg/sks-keyservers.netCA.pem':
+    ensure  => present,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0400',
+    source  => 'puppet:///modules/openstack_project/puppetmaster/sks-ca.pem',
+    require => File['/root/signing.gnupg'],
+  }
+
 # Enable puppetdb
 
   if $puppetdb {
@@ -216,33 +258,6 @@ class openstack_project::puppetmaster (
       puppet_service_name          => 'apache2',
       puppetdb_soft_write_failure  => true,
       manage_storeconfigs          => false,
-    }
-  }
-
-# Jenkins master management
-  if $update_cron {
-    cron { 'restartjenkinsmasters':
-      user        => 'root',
-      # Run through all masters onces a week.
-      weekday     => '6',
-      hour        => '0',
-      minute      => '15',
-      environment => 'PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',
-      command     => "flock -n /var/run/puppet/restart_jenkins_masters.lock ansible-playbook -f 1 /opt/system-config/production/playbooks/restart_jenkins_masters.yaml --extra-vars 'user=${jenkins_api_user} password=${jenkins_api_key}' >> /var/log/restart_jenkins_masters.log 2>&1",
-    }
-
-    logrotate::file { 'restartjenkinsmasters':
-      ensure  => present,
-      log     => '/var/log/restart_jenkins_masters.log',
-      options => ['compress',
-        'copytruncate',
-        'delaycompress',
-        'missingok',
-        'rotate 7',
-        'daily',
-        'notifempty',
-      ],
-      require => Cron['restartjenkinsmasters'],
     }
   }
 

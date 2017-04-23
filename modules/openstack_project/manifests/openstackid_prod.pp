@@ -35,11 +35,11 @@ class openstack_project::openstackid_prod (
   $id_recaptcha_template = '',
   $id_log_error_to_email = '',
   $id_log_error_from_email = '',
-  $id_environment = 'dev',
+  $id_environment = 'production',
   $ssl_cert_file_contents = '',
   $ssl_key_file_contents = '',
   $ssl_chain_file_contents = '',
-  $release = '1.0.18',
+  $release = '1.0.20',
   $app_url = '',
   $app_key = '',
   $email_driver = 'mail',
@@ -47,10 +47,25 @@ class openstack_project::openstackid_prod (
   $email_smtp_server_port = 587,
   $email_smtp_server_user = '',
   $email_smtp_server_password = '',
+  $laravel_version = 5,
+  $app_log_level = 'error',
+  $app_log_email_level = 'error',
+  $db_log_enabled = false,
+  $banning_enabled = true,
+  $app_debug = false,
+  $app_locale = 'en',
+  $curl_verify_ssl_cert = true,
+  $curl_allow_redirect = false,
+  $curl_timeout = 60,
+  $assets_base_url = 'https://www.openstack.org/',
+  $cache_driver = 'redis',
+  $session_driver = 'redis',
+  $session_cookie_secure = false,
 ) {
 
   realize (
     User::Virtual::Localuser['smarcet'],
+    User::Virtual::Localuser['maxwell'],
   )
 
   class { 'openstack_project::server':
@@ -92,6 +107,20 @@ class openstack_project::openstackid_prod (
     email_smtp_server_port     => $email_smtp_server_port,
     email_smtp_server_user     => $email_smtp_server_user,
     email_smtp_server_password => $email_smtp_server_password,
+    laravel_version            => $laravel_version,
+    app_log_level              => $app_log_level,
+    app_log_email_level        => $app_log_email_level,
+    db_log_enabled             => $db_log_enabled,
+    banning_enabled            => $banning_enabled,
+    app_debug                  => $app_debug,
+    app_locale                 => $app_locale,
+    curl_verify_ssl_cert       => $curl_verify_ssl_cert,
+    curl_allow_redirect        => $curl_allow_redirect,
+    curl_timeout               => $curl_timeout,
+    assets_base_url            => $assets_base_url,
+    cache_driver               => $cache_driver,
+    session_driver             => $session_driver,
+    session_cookie_secure      => $session_cookie_secure,
   }
 
   # redis (custom module written by tipit)

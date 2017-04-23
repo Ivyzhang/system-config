@@ -1,16 +1,23 @@
 # == Class: openstack_project::wiki
 #
 class openstack_project::wiki (
-  $mysql_root_password = '',
+  $site_hostname,
   $sysadmins = [],
-  $ssl_cert_file_contents = '',
-  $ssl_key_file_contents = '',
-  $ssl_chain_file_contents = '',
+  $bup_user = undef,
+  $serveradmin = undef,
+  $ssl_cert_file_contents = undef,
+  $ssl_key_file_contents = undef,
+  $ssl_chain_file_contents = undef,
+  $wg_dbserver = undef,
+  $wg_dbname = undef,
+  $wg_dbuser = undef,
   $wg_dbpassword = undef,
   $wg_secretkey = undef,
   $wg_upgradekey = undef,
-  $wg_captchaquestions = {},
+  $wg_recaptchasitekey = undef,
+  $wg_recaptchasecretkey = undef,
   $wg_googleanalyticsaccount = undef,
+  $disallow_robots = undef,
 ) {
 
   package { ['openssl', 'ssl-cert', 'subversion']:
@@ -25,24 +32,30 @@ class openstack_project::wiki (
   realize (
     User::Virtual::Localuser['rlane'],
     User::Virtual::Localuser['mkiss'],
+    User::Virtual::Localuser['maxwell'],
   )
 
   class { 'mediawiki':
     role                       => 'all',
     mediawiki_location         => '/srv/mediawiki/w',
     mediawiki_images_location  => '/srv/mediawiki/images',
-    site_hostname              => $::fqdn,
-    ssl_cert_file              => "/etc/ssl/certs/${::fqdn}.pem",
-    ssl_key_file               => "/etc/ssl/private/${::fqdn}.key",
-    ssl_chain_file             => '/etc/ssl/certs/intermediate.pem',
+    serveradmin                => $serveradmin,
+    site_hostname              => $site_hostname,
     ssl_cert_file_contents     => $ssl_cert_file_contents,
     ssl_key_file_contents      => $ssl_key_file_contents,
     ssl_chain_file_contents    => $ssl_chain_file_contents,
+    wg_dbserver                => $wg_dbserver,
+    wg_dbname                  => $wg_dbname,
+    wg_dbuser                  => $wg_dbuser,
     wg_dbpassword              => $wg_dbpassword,
     wg_secretkey               => $wg_secretkey,
     wg_upgradekey              => $wg_upgradekey,
-    wg_captchaquestions        => $wg_captchaquestions,
+    wg_recaptchasitekey        => $wg_recaptchasitekey,
+    wg_recaptchasecretkey      => $wg_recaptchasecretkey,
     wg_googleanalyticsaccount  => $wg_googleanalyticsaccount,
+    wg_sitename                => 'OpenStack',
+    wg_logo                    => "https://${site_hostname}/w/images/thumb/c/c4/OpenStack_Logo_-_notext.png/30px-OpenStack_Logo_-_notext.png",
+    disallow_robots            => $disallow_robots,
   }
   class { 'memcached':
     max_memory => 2048,
@@ -50,24 +63,24 @@ class openstack_project::wiki (
     tcp_port   => 11000,
     udp_port   => 11000,
   }
-  class { 'mysql::server':
-    root_password    => $mysql_root_password,
-    override_options => {
-      'mysqld' => {
-        'default-storage-engine' => 'InnoDB',
-      }
-    },
-  }
-  include mysql::server::account_security
 
-  mysql_backup::backup { 'wiki':
-    require => Class['mysql::server'],
+  mysql_backup::backup_remote { 'wiki':
+    database_host     => $wg_dbserver,
+    database_user     => $wg_dbuser,
+    database_password => $wg_dbpassword,
+  }
+  file { '/root/.my.cnf':
+    ensure  => link,
+    target  => '/root/.wiki_db.cnf',
+    require => Mysql_backup::Backup_remote['wiki'],
   }
 
-  include bup
-  bup::site { 'rs-ord':
-    backup_user   => 'bup-wiki',
-    backup_server => 'ci-backup-rs-ord.openstack.org',
+  if $bup_user != undef {
+    include bup
+    bup::site { 'rs-ord':
+      backup_user   => $bup_user,
+      backup_server => 'ci-backup-rs-ord.openstack.org',
+    }
   }
 
   class { '::elasticsearch':

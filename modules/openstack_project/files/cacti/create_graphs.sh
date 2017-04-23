@@ -13,8 +13,10 @@ php -q add_device.php --description="$HOST_NAME" --ip="$HOST_NAME" \
 HOST_ID=`php -q add_graphs.php --list-hosts |grep $HOST_NAME|cut -f 1`
 
 
-if [[ $HOST_NAME =~ hpuswest\.ic\.openstack\.org ]]; then
-    TREE_NAME='Infra Cloud West'
+if [[ $HOST_NAME =~ vanilla\.ic\.openstack\.org ]]; then
+    TREE_NAME='Infra Cloud Vanilla'
+elif [[ $HOST_NAME =~ chocolate\.ic\.openstack\.org ]]; then
+    TREE_NAME='Infra Cloud Chocolate'
 else
     TREE_NAME='All Hosts'
 fi
@@ -65,14 +67,16 @@ add_ds_graph "Host MIB - Available Disk Space" "Available Disk Space" \
 SNMP_QUERY_ID=`php -q add_graphs.php --host-id=$HOST_ID --list-snmp-queries | \
     grep "SNMP - Interface Statistics"|cut -f 1`
 
+for iface in $(php -q /usr/share/cacti/cli/add_graphs.php --host-id=$HOST_ID --snmp-field=ifName --list-snmp-values | grep -v tap| grep -v brq) ; do
 add_ds_graph "Interface - Traffic (bits/sec)" "In/Out Bits (64-bit Counters)" \
-    "ifOperStatus" "Up"
+    "ifName" "$iface"
 add_ds_graph "Interface - Errors/Discards" "In/Out Errors/Discarded Packets" \
-    "ifOperStatus" "Up"
+    "ifName" "$iface"
 add_ds_graph "Interface - Unicast Packets" "In/Out Unicast Packets" \
-    "ifOperStatus" "Up"
+    "ifName" "$iface"
 add_ds_graph "Interface - Non-Unicast Packets" "In/Out Non-Unicast Packets" \
-    "ifOperStatus" "Up"
+    "ifName" "$iface"
+done
 
 SNMP_QUERY_ID=`php -q add_graphs.php --host-id=$HOST_ID --list-snmp-queries | \
     grep "ucd/net - Get IO Devices"|cut -f 1`

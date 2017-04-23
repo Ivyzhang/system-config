@@ -59,7 +59,7 @@ class openstack_project::git_backend (
         'favicon'        => '/static/favicon.ico',
         'logo'           => '/static/openstack.png',
         'root-title'     => 'OpenStack git repository browser',
-        'max-repo-count' => 1500,
+        'max-repo-count' => 2500,
     },
     manage_cgitrc           => true,
     selinux_mode            => $selinux_mode
@@ -118,10 +118,15 @@ class openstack_project::git_backend (
   }
 
   cron { 'mirror_repack':
+    ensure      => absent,
+    user        => 'cgit',
+  }
+
+  cron { 'mirror_gitgc':
     user        => 'cgit',
     hour        => '4',
     minute      => '7',
-    command     => 'find /var/lib/git/ -not -path /var/lib/git/zuul -type d -name "*.git" -print -exec git --git-dir="{}" repack -afd \; -exec git --git-dir="{}" pack-refs --all \;',
+    command     => 'find /var/lib/git/ -not -path /var/lib/git/zuul -type d -name "*.git" -print -exec git --git-dir="{}" gc \;',
     environment => 'PATH=/usr/bin:/bin:/usr/sbin:/sbin',
     require     => User['cgit'],
   }
@@ -202,12 +207,12 @@ class openstack_project::git_backend (
     ensure => absent,
   }
 
-  cron { 'mirror_repack_zuul':
+  cron { 'mirror_gitgc_zuul':
     user        => 'zuul',
     weekday     => '0',
     hour        => '4',
     minute      => '7',
-    command     => 'find /var/lib/git/zuul -type d -name "*.git" -print -exec git --git-dir="{}" repack -afd \; -exec git --git-dir="{}" pack-refs --all \;',
+    command     => 'find /var/lib/git/zuul -type d -name "*.git" -print -exec git --git-dir="{}" git gc \;',
     environment => 'PATH=/usr/bin:/bin:/usr/sbin:/sbin',
     require     => User['zuul'],
   }
