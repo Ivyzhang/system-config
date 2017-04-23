@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 # Copyright 2013 OpenStack Foundation.
 # Copyright 2013 Hewlett-Packard Development Company, L.P.
@@ -16,6 +16,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+# NOTE(pabelanger): We now use the pip-and-virtualenv element from
+# diskimage-builder to do this. Default to true for backwards compatibility.
+SETUP_PIP=${SETUP_PIP:-true}
 
 #
 # Distro identification functions
@@ -87,13 +90,16 @@ function setup_puppet_fedora {
 
     mkdir -p /etc/puppet/modules/
 
-    # Puppet expects the pip command named as pip-python on
-    # Fedora, as per the packaged command name.  However, we're
-    # installing from get-pip.py so it's just 'pip'.  An easy
-    # work-around is to just symlink pip-python to "fool" it.
-    # See upstream issue:
-    #  https://tickets.puppetlabs.com/browse/PUP-1082
-    ln -fs /usr/bin/pip /usr/bin/pip-python
+    if $SETUP_PIP; then
+        # Puppet expects the pip command named as pip-python on
+        # Fedora, as per the packaged command name.  However, we're
+        # installing from get-pip.py so it's just 'pip'.  An easy
+        # work-around is to just symlink pip-python to "fool" it.
+        # See upstream issue:
+        #  https://tickets.puppetlabs.com/browse/PUP-1082
+        ln -fs /usr/bin/pip /usr/bin/pip-python
+    fi
+
     # Wipe out templatedir so we don't get warnings about it
     sed -i '/templatedir/d' /etc/puppet/puppet.conf
 
@@ -118,7 +124,7 @@ function setup_puppet_fedora {
     # package; clear it out and re-install from pip.  This way, the
     # package is installed for dependencies, and we have a pip-managed
     # requests with correctly vendored sub-packages.
-    sudo ${YUM} install -y python-requests
+    sudo ${YUM} install -y python2-requests
     sudo rm -rf /usr/lib/python2.7/site-packages/requests/*
     sudo rm -rf /usr/lib/python2.7/site-packages/requests-*.{egg,dist}-info
     sudo pip install requests
@@ -145,12 +151,16 @@ EOF
     yum update -y
 
     # NOTE: we preinstall lsb_release to ensure facter sets lsbdistcodename
-    yum install -y redhat-lsb-core git puppet
+    yum install -y redhat-lsb-core git
 
     rpm -ivh $puppet_pkg
+    yum install -y puppet
 
-    # see comments in setup_puppet_fedora
-    ln -s /usr/bin/pip /usr/bin/pip-python
+    if $SETUP_PIP; then
+        # see comments in setup_puppet_fedora
+        ln -s /usr/bin/pip /usr/bin/pip-python
+    fi
+
     # Wipe out templatedir so we don't get warnings about it
     sed -i '/templatedir/d' /etc/puppet/puppet.conf
 
@@ -202,6 +212,11 @@ EOF
         fi
         dpkg -i $puppet_deb
         rm $puppet_deb
+
+        # ansible also requires python2 on the host to run correctly.
+        # Make sure we have it, as some images come without it
+        DEBIAN_FRONTEND=noninteractive apt-get --option 'Dpkg::Options::=--force-confold' \
+            --assume-yes install python-minimal
     fi;
 
     apt-get update
@@ -211,19 +226,21 @@ EOF
         --assume-yes install -y --force-yes puppet git $rubypkg
     # Wipe out templatedir so we don't get warnings about it
     sed -i '/templatedir/d' /etc/puppet/puppet.conf
+    if [ -f /bin/systemctl ]; then
+        systemctl disable puppet
+    else
+        update-rc.d -f puppet disable
+    fi
 }
 
 function setup_puppet_opensuse {
-    local version=`grep -e "VERSION_ID" /etc/os-release | tr -d "\"" | cut -d "=" -f2`
-    zypper ar http://download.opensuse.org/repositories/systemsmanagement:/puppet/openSUSE_${version}/systemsmanagement:puppet.repo
-    zypper -v --gpg-auto-import-keys --no-gpg-checks -n ref
-    zypper --non-interactive in --force-resolution puppet
+    zypper --non-interactive install --force-resolution puppet
     # Wipe out templatedir so we don't get warnings about it
     sed -i '/templatedir/d' /etc/puppet/puppet.conf
 }
 
 function setup_puppet_gentoo {
-    emaint sync
+    echo yes | emaint sync -a
     emerge -q --jobs=4 puppet-agent
     sed -i '/templatedir/d' /etc/puppetlabs/puppet/puppet.conf
 }
@@ -253,7 +270,7 @@ function setup_pip {
     fi
 
     if is_opensuse; then
-        zypper --non-interactive in --force-resolution python python-xml
+        zypper --non-interactive install --force-resolution python python-xml
     fi
 
     python get-pip.py
@@ -278,7 +295,9 @@ function setup_pip {
     pip install -U setuptools
 }
 
-setup_pip
+if $SETUP_PIP; then
+    setup_pip
+fi
 
 if is_fedora; then
     setup_puppet_fedora
