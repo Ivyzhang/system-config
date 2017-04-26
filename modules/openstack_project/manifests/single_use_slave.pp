@@ -41,6 +41,10 @@ class openstack_project::single_use_slave (
     gitemail    => $jenkins_gitemail,
   }
 
+  class { 'project_config':
+    url  => $project_config_repo,
+  }
+
   class { 'java':
     distribution => 'jdk',
     version      => 'latest',
