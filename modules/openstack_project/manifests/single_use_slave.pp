@@ -40,4 +40,9 @@ class openstack_project::single_use_slave (
     gitfullname => $jenkins_gitfullname,
     gitemail    => $jenkins_gitemail,
   }
+
+  class { 'java':
+    distribution => 'jdk',
+    version      => 'latest',
+  }
 }
