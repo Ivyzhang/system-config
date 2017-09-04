@@ -11,7 +11,7 @@ class openstack_project::single_use_slave (
   $ssh_key = $openstack_project::jenkins_ssh_key,
   $jenkins_gitfullname = 'OpenStack Jenkins',
   $jenkins_gitemail = 'jenkins@openstack.org',
-  $project_config_repo = 'https://gitlabhost.rtp.raleigh.ibm.com/Y9CM3C756/project-config.git',
+  $project_config_repo = 'https://gitlabhost.rtp.raleigh.ibm.com/ocata/project-config.git',
 ) inherits openstack_project {
   class { 'openstack_project::template':
     certname                  => $certname,

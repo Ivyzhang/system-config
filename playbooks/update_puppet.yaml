@@ -4,7 +4,7 @@
   gather_facts: false
   tasks:
   - git:
-      repo: https://gitlabhost.rtp.raleigh.ibm.com/Y9CM3C756/system-config.git
+      repo: https://gitlabhost.rtp.raleigh.ibm.com/ocata/system-config.git
       dest: /opt/system-config/production
       force: yes
   - shell: ./install_modules.sh

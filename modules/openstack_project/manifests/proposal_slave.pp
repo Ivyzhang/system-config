@@ -9,7 +9,7 @@ class openstack_project::proposal_slave (
   $proposal_ssh_private_key,
   $jenkins_gitfullname = 'OpenStack Jenkins',
   $jenkins_gitemail = 'jenkins@openstack.org',
-  $project_config_repo = 'https://gitlabhost.rtp.raleigh.ibm.com/Y9CM3C756/project-config.git',
+  $project_config_repo = 'https://gitlabhost.rtp.raleigh.ibm.com/ocata/project-config.git',
   $zanata_server_url,
   $zanata_server_user,
   $zanata_server_api_key,

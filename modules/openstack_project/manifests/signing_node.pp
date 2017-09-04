@@ -27,7 +27,7 @@ class openstack_project::signing_node (
   $gitpgpkey = 'infra-root@openstack.org',
   $gerrituser = 'release',
   $gerritkey = undef,
-  $project_config_repo = 'https://gitlabhost.rtp.raleigh.ibm.com/Y9CM3C756/project-config.git',
+  $project_config_repo = 'https://gitlabhost.rtp.raleigh.ibm.com/ocata/project-config.git',
   $packaging_keytab = '',
 ) {
   class { 'openstack_project::slave':

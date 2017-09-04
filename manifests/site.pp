@@ -25,7 +25,7 @@ node 'puppet-master-prod.openstacklocal' {
 
 node 'zuul-prod.openstacklocal' {
   class { 'openstack_project::zuul_prod':
-    project_config_repo            => 'https://gitlabhost.rtp.raleigh.ibm.com/Y9CM3C756/project-config.git',
+    project_config_repo            => 'https://gitlabhost.rtp.raleigh.ibm.com/ocata/project-config.git',
     gerrit_server                  => 'review.openstack.org',
     gerrit_user                    => 'ibm_storage_ci',
     gerrit_ssh_host_key            => hiera('gerrit_ssh_rsa_pubkey_contents'),
@@ -78,7 +78,7 @@ node 'jenkins-master-prod.openstacklocal' {
     puppetmaster_server       => 'puppet-master-prod.openstacklocal',
   }
   class { 'openstack_project::jenkins':
-    project_config_repo     => 'https://gitlabhost.rtp.raleigh.ibm.com/Y9CM3C756/project-config.git',
+    project_config_repo     => 'https://gitlabhost.rtp.raleigh.ibm.com/ocata/project-config.git',
     jenkins_username	    => hiera('jenkins_username'),
     jenkins_password        => hiera('jenkins_jobs_password'),
     jenkins_ssh_private_key => hiera('jenkins_ssh_private_key_contents'),
@@ -104,7 +104,7 @@ node 'nodepool-prod.openstacklocal' {
 
   class { '::openstackci::nodepool':
     vhost_name               => 'nodepool-prod.openstacklocal',
-    project_config_repo      => 'https://gitlabhost.rtp.raleigh.ibm.com/Y9CM3C756/project-config.git',
+    project_config_repo      => 'https://gitlabhost.rtp.raleigh.ibm.com/ocata/project-config.git',
     mysql_password           => hiera('nodepool_mysql_password'),
     mysql_root_password      => hiera('nodepool_mysql_root_password'),
     nodepool_ssh_private_key => hiera('jenkins_ssh_private_key_contents'),
